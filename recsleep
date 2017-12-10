@@ -1,0 +1,21 @@
+#!/bin/bash
+LENGTH=$1
+STREAM=$2
+IPCAM=$3
+if [ -z "$1" ]; then
+  LENGTH=8h
+fi
+if [ -z "$2" ]; then
+  STREAM=1
+fi
+if [ -z "$3" ]; then
+  IPCAM=192.168.0.110
+fi
+
+#OUT=~/Videoklipp/sleeplab/$(date +"20%y%m%d")_sleep.mp4
+OUTDIR=~/Videoklipp/sleeplab
+OUTFILE=$OUTDIR/sleep.mp4
+RTSP=rtsp://$IPCAM/play$STREAM.sdp
+echo "Recording $LENGTH from $RTSP to $OUTFILE"
+mv -f -v $OUTFILE $OUTDIR/sleep-backup.mp4
+timeout $LENGTH mpv -v --mute=yes $RTSP --record-file $OUTFILE

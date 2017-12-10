@@ -1,0 +1,8 @@
+[Unit]
+Description=Record sleep from DCS-936L camera
+
+[Service]
+ExecStart=/home/henning/.local/bin/rsl
+
+[Install]
+WantedBy=multi-user.target

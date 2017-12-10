@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -u admin: --compressed 'http://192.168.0.110/eng/admin/export_log.cgi'  -H 'Referer: http://192.168.0.110/eng/web_log.cgi' --data 'export=true' -s

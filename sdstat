@@ -1,0 +1,3 @@
+#!/bin/bash
+curl 'http://192.168.0.110/eng/admin/adv_record.cgi' -H 'Authorization: Basic YWRtaW46' -H 'Referer: http://192.168.0.110/eng/mainFrame.cgi?nav=Setup' -s | grep 'enable>0'
+curl -s 'http://192.168.0.110/eng/admin/adv_sdcard.cgi' -H 'Authorization: Basic YWRtaW46'  -H 'Referer: http://192.168.0.110/eng/mainFrame.cgi?nav=Setup' | grep -i strsdstatus

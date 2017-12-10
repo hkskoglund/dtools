@@ -1,0 +1,2 @@
+#!/bin/bash
+curl -v 'http://192.168.0.110/eng/admin/reboot.cgi'  -H 'Authorization: Basic YWRtaW46' -H 'Referer: http://192.168.0.110/eng/admin/tools_default.cgi'  --data 'reboot=true' --compressed -s -o /dev/null 2>&1 | grep HTTP

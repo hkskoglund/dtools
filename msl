@@ -1,0 +1,18 @@
+#!/bin/bash
+ROTATE=$1
+STARTDAY=$2
+STOPDAY=$3
+if [ -z "$1" ]; then
+  ROTATE=180
+fi
+if [ -z "$2" ]; then
+  STARTDAY=1
+fi
+if [ -z "$3" ]; then
+  STOPDAY=0
+fi
+START=$(date +"20%y%m%d" -d "-$STARTDAY day")
+STOP=$(date +"20%y%m%d" -d "-$STOPDAY day")
+DIR=~/Videoklipp/sleeplab
+echo Playing motion videos from $START to $STOP \(rotated $ROTATE\)
+mpv --video-rotate $ROTATE $DIR/${START}_2{2..3}*.mp4 $DIR/${STOP}_{0..1}{0..9}*.mp4 --loop-playlist
