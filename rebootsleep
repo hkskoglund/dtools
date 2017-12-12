@@ -1,2 +1,3 @@
 #!/bin/bash
-curl -v 'http://192.168.0.110/eng/admin/reboot.cgi'  -H 'Authorization: Basic YWRtaW46' -H 'Referer: http://192.168.0.110/eng/admin/tools_default.cgi'  --data 'reboot=true' --compressed -s -o /dev/null 2>&1 | grep HTTP
+IPCAM=192.168.0.110
+curl -v  --compressed -s -o /dev/null 2>&1  -u admin: --data 'reboot=true' -e "http://$IPCAM/eng/admin/tools_default.cgi" "http://$IPCAM/eng/admin/reboot.cgi"
