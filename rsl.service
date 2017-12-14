@@ -14,3 +14,4 @@ SuccessExitStatus=0 255
 
 [Install]
 WantedBy=multi-user.target
+Also=rsl.timer

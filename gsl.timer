@@ -1,9 +1,9 @@
 [Unit]
 Description=Get sleep video from DCS-936L camera each hour
-Requires=gsl.service
+
 [Timer]
 Persistent=true
 OnCalendar=hourly
 
 [Install]
-WantedBy=timers.target
+WantedBy=gsl.service

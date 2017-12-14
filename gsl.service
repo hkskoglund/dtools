@@ -6,3 +6,4 @@ ExecStart=/home/henning/.local/bin/gsl
 
 [Install]
 WantedBy=multi-user.target
+Also=gsl.timer

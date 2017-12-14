@@ -1,2 +1,0 @@
-#!/bin/bash
-cp -a -v -n /run/media/henning/3830-6132/DCS-936L/**/*/* ~/Videoklipp/sleeplab/

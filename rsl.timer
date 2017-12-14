@@ -1,10 +1,9 @@
 [Unit]
 Description=Record sleep from DCS-936L camera at 22:30
-Requires=rsl.service
 
 [Timer]
-Persistent=false
+Persistent=true
 OnCalendar=Mon-Sun *-*-* 22:30:00
 
 [Install]
-WantedBy=timers.target
+WantedBy=rsl.service
