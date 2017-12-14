@@ -1,0 +1,3 @@
+#!/bin/bash
+#Symlinking services does not work well in systemd at the moment
+sudo cp -v ~/.local/bin/?sl.{service,timer} /etc/systemd/system

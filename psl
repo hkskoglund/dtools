@@ -1,0 +1,10 @@
+#!/bin/bash
+IPCAM=$2
+LOGFILE=$1
+if [ -z $1 ]; then
+  LOGFILE=/home/henning/ipcamping.log
+fi
+if [ -z $2 ]; then
+  IPCAM=192.168.0.110
+fi;
+ping -i 5 -D $IPCAM | while read pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" | tee -a $LOGFILE ; fi; done

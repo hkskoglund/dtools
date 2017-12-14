@@ -1,0 +1,9 @@
+[Unit]
+Description=Ping DCS-936L camera and log 
+
+[Service]
+ExecStart=/home/henning/.local/bin/psl /home/henning/Nedlastinger/ipcamping.log 192.168.0.110
+
+[Install]
+WantedBy=multi-user.target
+#Also=psl.timer
