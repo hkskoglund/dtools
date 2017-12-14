@@ -1,0 +1,4 @@
+#!/bin/bash
+systemctl enable {r,g}sl {r,g}sl.timer
+systemctl start {r,g}sl.timer
+systemctl status {r,g}sl*
