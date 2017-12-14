@@ -1,8 +1,0 @@
-tracker status
-tracker reset -r
-tracker reset -c
-tracker status
-#sudo rpm -e --nodeps -v --test tracker 
-sudo rpm -e --nodeps tracker -v
-#sudo dnf config-manager --setopt exclude=tracker --save
-sudo dnf config-manager --dump | grep exclude
