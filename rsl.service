@@ -12,6 +12,6 @@ KillSignal=SIGINT
 #des. 11 08:59:59 satellite systemd[1]: rsl.service: Main process exited, code=exited, status=255/n/a
 SuccessExitStatus=0 255
 
-[Install]
-WantedBy=multi-user.target
-Also=rsl.timer
+#[Install]
+#WantedBy=multi-user.target
+#Also=rsl.timer

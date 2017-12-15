@@ -4,6 +4,6 @@ Description=Get sleep video from DCS-936L camera
 [Service]
 ExecStart=/home/henning/.local/bin/gsl
 
-[Install]
-WantedBy=multi-user.target
-Also=gsl.timer
+#[Install]
+#WantedBy=multi-user.target
+#Also=gsl.timer

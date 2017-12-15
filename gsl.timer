@@ -6,4 +6,4 @@ Persistent=true
 OnCalendar=hourly
 
 [Install]
-WantedBy=gsl.service
+WantedBy=network-online.target

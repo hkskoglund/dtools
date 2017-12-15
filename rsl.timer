@@ -2,8 +2,8 @@
 Description=Record sleep from DCS-936L camera at 22:30
 
 [Timer]
-Persistent=true
+#Persistent=true
 OnCalendar=Mon-Sun *-*-* 22:30:00
 
 [Install]
-WantedBy=rsl.service
+WantedBy=network-online.target

@@ -1,4 +1,4 @@
 #!/bin/bash
-systemctl enable {r,g}sl {r,g}sl.timer
-systemctl start {r,g}sl.timer
-systemctl status {r,g}sl*
+systemctl enable rsl.timer gsl.timer
+systemctl start rsl.timer gsl.timer
+systemctl status {r,g}sl.{timer,service}
