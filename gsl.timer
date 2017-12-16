@@ -2,6 +2,10 @@
 Description=Get sleep video from DCS-936L camera each hour
 
 [Timer]
+
+#Get videos as immediately after boot
+OnBootSec=0
+#Persistent is only applicable when using OnCalendar
 Persistent=true
 OnCalendar=hourly
 
