@@ -10,4 +10,5 @@ Persistent=true
 OnCalendar=hourly
 
 [Install]
-WantedBy=network-online.target
+#WantedBy=network-online.target
+WantedBy=default.target
