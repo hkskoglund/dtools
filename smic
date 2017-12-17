@@ -1,0 +1,16 @@
+#!/bin/bash
+URL="http://192.168.0.110/eng/admin/adv_audiovideo.cgi"
+if [ "$1" = "-g" ]; then
+ echo "Getting mic volume for $URL"
+ curl --anyauth $URL -e $URL -s | tail -n 30 | grep -A3 '<mic'
+elif [ "$1" = "-s" ]; then
+  if [ -z $2 ]; then
+    echo 'No mic volume specificed 10-100 (in 10 increments)'
+  else
+     VOLUME=$2
+     echo "Setting mic volume to $VOLUME for $URL"
+     curl --anyauth $URL -e $URL --data "micEnableBox=on&micEnable=1&micVolume=$VOLUME" -s | tail -n 30 | grep -A3 '<mic'
+  fi
+else
+  echo -e 'Usage: smic [option] [level]\nSet/get mic volume of DCS-936L camera\n  -g          get mic vol.\n  -s level    set mic vol.'
+fi
