@@ -3,7 +3,7 @@ IPCAM=$2
 LOGFILE=$1
 INTERVAL=$3
 if [ -z $1 ]; then
-  LOGFILE=/home/henning/ipcamping.log
+  LOGFILE=/home/henning/Nedlastinger/ipcamping.log
 fi
 if [ -z $2 ]; then
   IPCAM=192.168.0.110
@@ -11,4 +11,7 @@ fi;
 if [ -z $3 ]; then
   INTERVAL=30
 fi;
+if (( $(stat -c %s $LOGFILE) > 10000000 )); then
+  rm -v $LOGFILE
+fi
 ping -i $INTERVAL -D $IPCAM | while read pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" | tee -a $LOGFILE ; fi; done
