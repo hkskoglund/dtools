@@ -28,7 +28,7 @@ SDOPT="--anyauth -u admin: -v -J --compressed"
 #  done; curl --anyauth -u admin: -v -J --compressed -e "http://$IPCAM/eng/admin/adv_sdcard.cgi" $URLOPT; }
 echo "Fetching motion log from camera..."
 curl --anyauth -u admin: --data 'export=true' -s --compressed "http://$IPCAM/eng/admin/export_log.cgi" -e "http://$IPCAM/eng/web_log.cgi"|\
- grep -E 'Motion'.*'SD Card is OK' | cut -d' ' -f4 | { while read FILENAME ; do FILEPATH=$MODEL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
+ tee "/home/henning/Nedlastinger/camera-$MODEL.log" | grep -E 'Motion'.*'SD Card is OK' | cut -d' ' -f4 | { while read FILENAME ; do FILEPATH=$MODEL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
  if [ ! -f $FILENAME ]; then URLOPT+="-O http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
   #else echo "$FILENAME already downloaded"; 
  fi\
