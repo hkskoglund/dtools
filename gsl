@@ -32,6 +32,6 @@ curl --anyauth -u admin: --data 'export=true' -s --compressed "http://$IPCAM/eng
  if [ ! -f $FILENAME ]; then URLOPT+="-O http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
   #else echo "$FILENAME already downloaded"; 
  fi\
-  done; if [ ${#URLOPT} -gt 0 ]; then echo "Fetching video from camera at $IPCAM"; curl --anyauth -u admin: -J --compressed -e "http://$IPCAM/eng/admin/adv_sdcard.cgi" $URLOPT; else\
+  done; if [ ${#URLOPT} -gt 0 ]; then echo "Fetching video from camera at $IPCAM"; curl --anyauth -u admin: -J --compressed -s -e "http://$IPCAM/eng/admin/adv_sdcard.cgi" $URLOPT; else\
   echo "No new videos, skipping download"; fi }
 cd - >/dev/null
