@@ -1,17 +1,24 @@
 #!/bin/bash
-IPCAM=$2
-LOGFILE=$1
-INTERVAL=$3
+#ping camera as specific intervals and log echo response
+INTERVAL=60
+IPCAM=$1
+
 if [ -z $1 ]; then
-  LOGFILE=/home/henning/Nedlastinger/ipcamping.log
-fi
-if [ -z $2 ]; then
   IPCAM=192.168.0.110
 fi;
-if [ -z $3 ]; then
-  INTERVAL=30
-fi;
-if (( $(stat -c %s $LOGFILE) > 10000000 )); then
-  rm -v $LOGFILE
+
+
+DEVSTAT=$(curl --anyauth -u admin:  -s  "http://$IPCAM/eng/admin/st_device.cgi" -e "http://$IPCAM")
+#Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
+SERIAL=$(echo $DEVSTAT | tr ' ' '\n' | grep -m 1 serial | cut -d ">" -f 2 | cut -d "<" -f 1)
+CAMERANAME=$(echo $DEVSTAT | tr ' ' '\n' | grep -m 1 cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
+
+
+PINGLOG="$HOME/Nedlastinger/ping-$CAMERANAME-$SERIAL-$IPCAM.log"
+
+echo "Ping $CAMERANAME $SERIAL at $IPCAM each $INTERVAL sec -> $PINGLOG"
+
+if (( $(stat -c %s $PINGLOG) > 10000000 )); then
+  rm -v $PINGLOG
 fi
-ping -i $INTERVAL -D $IPCAM | while read pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" | tee -a $LOGFILE ; fi; done
+ping -i $INTERVAL -D $IPCAM | while read pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" | tee -a $PINGLOG ; fi; done

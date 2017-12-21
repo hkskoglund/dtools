@@ -1,8 +1,8 @@
 [Unit]
-Description=Get sleep video from DCS-936L camera
+Description=Get sleep video from D-link camera
 
 [Service]
-ExecStart=/home/henning/.local/bin/gsl
+ExecStart=/home/henning/.local/bin/gsl 192.168.0.110
 
 #[Install]
 #WantedBy=multi-user.target

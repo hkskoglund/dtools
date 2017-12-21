@@ -1,37 +1,35 @@
 #!/bin/bash
-VIDDIR=/home/henning/Videoklipp/sleeplab
+#Uses camera SD log to get mp4 files from camera
+#Known issues: will not get files if the log is cleared, i.e after reboot of camera
+VIDDIR=$HOME/Videoklipp/sleeplab
 cd $VIDDIR
-IPCAM=$2
-FILES=$1
-MODEL=$3
+IPCAM=$1
+VERBOSE="-v"
+
 if [ -z "$1" ]; then
-  FILES=100
-fi
-if [ -z "$2" ]; then
   IPCAM=192.168.0.110
 fi
-if [ -z "$3"]; then
-   MODEL=DCS-936L
-fi
-#echo "Fetching latest $FILES video files from $MODEL camera at $IPCAM"
-LOGOPT="--anyauth -u admin: --data 'export=true' -s --compressed -v"
-SDOPT="--anyauth -u admin: -v -J --compressed"
+
+DEVSTAT=$(curl --anyauth -u admin:  -s  "http://$IPCAM/eng/admin/st_device.cgi" -e "http://$IPCAM")
+#Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
+SERIAL=$(echo $DEVSTAT | tr ' ' '\n' | grep -m 1 serial | cut -d ">" -f 2 | cut -d "<" -f 1)
+CAMERANAME=$(echo $DEVSTAT | tr ' ' '\n' | grep -m 1 cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
+
+
+MOTIONLOG="$HOME/Nedlastinger/motion-$CAMERANAME-$SERIAL-$IPCAM.log"
+
 # Max. command line size bash; getconf ARG_MAX
 #https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
-#curl $LOGOPT "http://$IPCAM/eng/admin/export_log.cgi" -e "http://$IPCAM/eng/web_log.cgi"  |\
-# grep -E 'Motion'.*'SD Card is OK' | tail -n $FILES | cut -d' ' -f4 | { while read FILENAME ; do FILEPATH=$MODEL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
-# curl $SDOPT -e "http://$IPCAM/eng/admin/adv_sdcard.cgi" -O "http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH" ; done }
-# Let curl reuse existing connection (persistent-connection) until server closes connection by sending "Connection: close"
-#curl --anyauth -u admin: --data 'export=true' -s --compressed -v "http://$IPCAM/eng/admin/export_log.cgi" -e "http://$IPCAM/eng/web_log.cgi"|\
-# grep -E 'Motion'.*'SD Card is OK' | tail -n $FILES | cut -d' ' -f4 | { while read FILENAME ; do FILEPATH=$MODEL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
-# URLOPT+="-O http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
-#  done; curl --anyauth -u admin: -v -J --compressed -e "http://$IPCAM/eng/admin/adv_sdcard.cgi" $URLOPT; }
-echo "Fetching motion log from camera..."
-curl --anyauth -u admin: --data 'export=true' -s --compressed "http://$IPCAM/eng/admin/export_log.cgi" -e "http://$IPCAM/eng/web_log.cgi"|\
- tee "/home/henning/Nedlastinger/camera-$MODEL.log" | grep -E 'Motion'.*'SD Card is OK' | cut -d' ' -f4 | { while read FILENAME ; do FILEPATH=$MODEL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
- if [ ! -f $FILENAME ]; then URLOPT+="-O http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
-  #else echo "$FILENAME already downloaded"; 
- fi\
-  done; if [ ${#URLOPT} -gt 0 ]; then echo "Fetching video from camera at $IPCAM"; curl --anyauth -u admin: -J --compressed -s -e "http://$IPCAM/eng/admin/adv_sdcard.cgi" $URLOPT; else\
-  echo "No new videos, skipping download"; fi }
+echo "Fetch log from $SERIAL camera $CAMERANAME at $IPCAM -> $MOTIONLOG"
+curl --anyauth -u admin: --data 'export=true' -s --compressed "http://$IPCAM/eng/admin/export_log.cgi" -e "http://$IPCAM/eng/web_log.cgi"\
+  | tee $MOTIONLOG  | grep -E 'Motion'.*'SD Card is OK' | cut -d' ' -f4 \
+  | { while read FILENAME ; do FILEPATH=$SERIAL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
+        if [ ! -f $FILENAME ]; then URLS+="http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
+        #else echo "$FILENAME already downloaded"; 
+        fi\
+     done;\
+     if [ ${#URLS} -gt 0 ]; then echo "Fetching video from camera at $IPCAM";\
+        curl --anyauth -u admin: -J --compressed -s $VERBOSE --remote-name-all -e "http://$IPCAM" $URLS;\
+     else  echo "No new videos, skipping download"\ 
+     fi }
 cd - >/dev/null
