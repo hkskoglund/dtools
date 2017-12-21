@@ -1,0 +1,8 @@
+[Unit]
+Description=Get sleep video from camera on %I
+
+[Service]
+ExecStart=/home/henning/.local/bin/gsl %I
+#[Install]
+#WantedBy=multi-user.target
+#Also=gsl.timer

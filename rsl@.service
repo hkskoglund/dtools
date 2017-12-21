@@ -1,12 +1,12 @@
 [Unit]
 
-Description=Record sleep from DCS-936L camera
+Description=Record sleep from DCS-936L camera on %I
 
 #Warning: rsl.service changed on disk. Run 'systemctl daemon-reload' to reload units.
 
 [Service]
 
-ExecStart=/home/henning/.local/bin/rsl
+ExecStart=/home/henning/.local/bin/rsl %I
 #FFmpeg problem with default SIGTERM mov,mp4,m4a,3gp,3g2,mj2 @ 0x5633a398eec0] moov atom not found
 #sleep.mp4: Invalid data found when processing input 
 KillSignal=SIGINT
@@ -14,7 +14,7 @@ KillSignal=SIGINT
 #des. 11 08:59:59 satellite systemd[1]: rsl.service: Main process exited, code=exited, status=255/n/a
 SuccessExitStatus=0 255
 # Get latest sleep data files
-ExecStopPost=/home/henning/.local/bin/gsl
+ExecStopPost=/home/henning/.local/bin/gsl %I
 
 #[Install]
 #WantedBy=multi-user.target

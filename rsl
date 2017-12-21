@@ -1,34 +1,37 @@
 #!/bin/bash
-LENGTH=$1
-FILEBASE=$2
-STREAM=$3
+#Record sleep from camera, post process audio with silence removal and specific audio levels
+IPCAM=$1
+LENGTH=$2
+FILEBASE=$3
+STREAM=$4
 #IFPS=$4
-OFPS=$4
-IPCAM=$5
-OUTDIR=/home/henning/Videoklipp/sleeplab
+OFPS=$5
+
+OUTDIR=$HOME/Videoklipp/sleeplab
 if [ "$1" == "-h" ]; then
    echo "Arguments : LENGTH (10=10sec,08:00:00 8hours) FILEBASE (without extension) STREAM  (1/2/3)  output FPS  IPCAM (def 192.168.0.110) "
    exit 0
 fi
-if [ -z "$1" ]; then
+if [ -z "$2" ]; then
   LENGTH=09:00:00
 fi
-if [ -z "$2" ]; then
+if [ -z "$3" ]; then
   FILEBASE=sleep
 fi
-if [ -z "$3" ]; then
+if [ -z "$4" ]; then
   STREAM=1
 fi
 # Only necessary for raw video files -> probably not applicable for rtsp stream from D-link cam DCS-936L
 #if [ -z "$4" ]; then
 #  IFPS=10
 #fi
-if [ -z "$4" ]; then
+if [ -z "$5" ]; then
   OFPS=30
 fi
 
-if [ -z "$5" ]; then
-  IPCAM=192.168.0.110
+if [ -z "$1" ]; then
+  echo "Usage: rsl {ip-adr} {length} {output-file} {stream} {fps}"
+  exit 1 
 fi
 #OUT=~/Videoklipp/sleeplab/$(date +"20%y%m%d")_sleep.mp4
 

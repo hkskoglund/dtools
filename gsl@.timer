@@ -11,4 +11,5 @@ OnCalendar=hourly
 
 [Install]
 #WantedBy=network-online.target
-WantedBy=default.target
+# USER WantedBy=default.target
+WantedBy=sleep.target

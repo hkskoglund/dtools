@@ -1,6 +1,6 @@
 #!/bin/bash
-systemctl --user link "/home/henning/.local/bin/gsl.timer" "/home/henning/.local/bin/gsl.service" "/home/henning/.local/bin/rsl.timer" "/home/henning/.local/bin/rsl.service" "/home/henning/.local/bin/psl.service"
-systemctl --user enable gsl.timer rsl.timer psl.service
+systemctl --user link "$HOME/.local/bin/gsl@.timer" "$HOME/.local/bin/gsl@.service" "$HOME/.local/bin/rsl@.timer" "$HOME/.local/bin/rsl@.service" "$HOME/.local/bin/psl@.service"
+systemctl --user enable gsl@.timer rsl@.timer psl@.service "$HOME/.local/bin/sleep@.target"
 systemctl --user daemon-reload
-systemctl --user start rsl.timer gsl.timer psl.service
-systemctl --user status {r,g,p}sl.{timer,service}
+#systemctl --user start rsl.timer gsl.timer psl.service
+#systemctl --user status {r,g,p}sl.{timer,service}

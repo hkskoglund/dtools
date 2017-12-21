@@ -7,7 +7,8 @@ IPCAM=$1
 VERBOSE="-v"
 
 if [ -z "$1" ]; then
-  IPCAM=192.168.0.110
+  echo "Usage: gsl {ip-addr}"
+  exit 1
 fi
 
 DEVSTAT=$(curl --anyauth -u admin:  -s  "http://$IPCAM/eng/admin/st_device.cgi" -e "http://$IPCAM")
