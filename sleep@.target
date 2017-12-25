@@ -1,7 +1,0 @@
-[Unit]
-Description=Start record,get and ping camera at user login for %i
-Wants=gsl@%i.timer
-Wants=rsl@%i.timer
-Wants=psl@%i.service
-[Install]
-WantedBy=default.target

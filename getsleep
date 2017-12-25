@@ -11,18 +11,21 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-DEVSTAT=$(curl --anyauth -u admin:  -s  "http://$IPCAM/eng/admin/st_device.cgi" -e "http://$IPCAM")
-#Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
-SERIAL=$(echo $DEVSTAT | tr ' ' '\n' | grep -m 1 serial | cut -d ">" -f 2 | cut -d "<" -f 1)
-CAMERANAME=$(echo $DEVSTAT | tr ' ' '\n' | grep -m 1 cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
+DEFOPT="--anyauth -u admin: -s --compressed -e http://$IPCAM/"
 
+DEVSTAT=$(curl $DEFOPT  "http://$IPCAM/eng/admin/st_device.cgi")
+#Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
+# head inserted in pipe chain to avoid write error (broken pipe) to pipe into grep -m 1 
+SERIAL=$(echo $DEVSTAT  | tr ' ' '\n' | head -n 15 |  grep serial | cut -d ">" -f 2 | cut -d "<" -f 1)
+CAMERANAME=$(echo $DEVSTAT | tr ' ' '\n' | head -n 15 | grep cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
 
 MOTIONLOG="$HOME/Nedlastinger/motion-$CAMERANAME-$SERIAL-$IPCAM.log"
+
 
 # Max. command line size bash; getconf ARG_MAX
 #https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
 echo "Fetch log from $SERIAL camera $CAMERANAME at $IPCAM -> $MOTIONLOG"
-curl --anyauth -u admin: --data 'export=true' -s --compressed "http://$IPCAM/eng/admin/export_log.cgi" -e "http://$IPCAM/eng/web_log.cgi"\
+curl $DEFOPT --data 'export=true'  "http://$IPCAM/eng/admin/export_log.cgi"\
   | tee $MOTIONLOG  | grep -E 'Motion'.*'SD Card is OK' | cut -d' ' -f4 \
   | { while read FILENAME ; do FILEPATH=$SERIAL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
         if [ ! -f $FILENAME ]; then URLS+="http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
@@ -30,7 +33,7 @@ curl --anyauth -u admin: --data 'export=true' -s --compressed "http://$IPCAM/eng
         fi\
      done;\
      if [ ${#URLS} -gt 0 ]; then echo "Fetching video from camera at $IPCAM";\
-        curl --anyauth -u admin: -J --compressed -s $VERBOSE --remote-name-all -e "http://$IPCAM" $URLS;\
-     else  echo "No new videos, skipping download"\ 
+        curl $DEFOPT -J  $VERBOSE --remote-name-all  $URLS;\
+     else  echo "No new videos, skipping download";\
      fi }
 cd - >/dev/null

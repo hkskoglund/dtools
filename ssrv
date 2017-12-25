@@ -1,10 +1,12 @@
 #!/bin/bash
 if [ -z "$1" ]; then
   echo "Usage: ssrv {ip-adr}"
-  echo "Start record sleep at 22:30, get sleep from SD card hourly and ping camera each minute"
   exit 1
 fi
 # Start at user login
-systemctl --user enable sleep@$1.target
+#systemctl --user enable sleep@$1.target
 systemctl --user start rsl@$1.timer gsl@$1.timer psl@$1.service
 systemctl --user --no-pager status rsl@$1.service gsl@$1.service rsl@$1.timer gsl@$1.timer psl@$1.service
+systemctl --user add-wants sleep.target gsl@$1.timer 
+systemctl --user add-wants sleep.target rsl@$1.timer
+systemctl --user add-wants sleep.target psl@$1.service
