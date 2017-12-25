@@ -4,8 +4,7 @@
 #set -x 
 #trap read debug
 VIDDIR=$HOME/Videoklipp/sleeplab
-
-if "cd $VIDDIR" -gt 0 ; then
+if ! cd "$VIDDIR" ; then
    echo "Failed to cd into $VIDDIR, using $PWD instead"
   VIDDIR=$PWD;
 fi
