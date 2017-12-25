@@ -48,12 +48,13 @@ mv -v -f "$VIDEOFILE" $FILEBASE-backup.mp4
 mv -v -f "$MP3FILE" $FILEBASE-backup.mp3
 if [ -z "$OFPS" ]; then
   # Let ffmpeg determine framerates
-  ffmpeg -y -t $LENGTH -i "$RTSP" "$VIDEOFILE" "$MP3FILE" "$AUDIOFILTER"
+  # Want word-splitting so that $AUDIOFILTER is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
+  ffmpeg -y -t $LENGTH -i "$RTSP" "$VIDEOFILE" "$MP3FILE" $AUDIOFILTER
 #  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $LENGTH -i $RTSP $VIDEOFILE $MP3FILE $AUDIOFILTER
 
 else
   #Force specific output framerate
-  ffmpeg -y -t $LENGTH -i "$RTSP" -r $OFPS "$VIDEOFILE" "$MP3FILE" "$AUDIOFILTER"
+  ffmpeg -y -t $LENGTH -i "$RTSP" -r "$OFPS" "$VIDEOFILE" "$MP3FILE" $AUDIOFILTER
 fi
 
 echo "FFMPEG/RSL script exit statsus " $?

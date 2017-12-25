@@ -46,7 +46,7 @@ done;
 
 if [ ${#URLS} -gt 0 ]; then 
   echo "Fetching video from camera at $IPCAM";
-  curl $DEFOPT -J  $VERBOSE --remote-name-all "$URLS"
+  curl $DEFOPT -J  $VERBOSE --remote-name-all $URLS
 else  
   echo "No new videos, skipping download"
 fi
