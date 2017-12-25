@@ -22,9 +22,9 @@ DEFOPT="-u admin: --anyauth -s --compressed -e http://$IPCAM/"
 DEVSTAT=$(curl $DEFOPT  "http://$IPCAM/eng/admin/st_device.cgi")
 #Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
 # head inserted in pipe chain to avoid write error (broken pipe) to pipe into grep -m 1 
-DEVSTATHEAD=$(echo "$DEVSTAT"  | tr ' ' '\n' | head -n 15)
-SERIAL=$(echo "$DEVSTATHEAD" |  grep serial | cut -d ">" -f 2 | cut -d "<" -f 1)
-CAMERANAME=$(echo "$DEVSTATHEAD" | grep cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
+DEVSTATHEAD=$(tr ' ' '\n' <<< "$DEVSTAT" | head -n 15)
+SERIAL=$(grep serial <<< "$DEVSTATHEAD" | cut -d ">" -f 2 | cut -d "<" -f 1)
+CAMERANAME=$(grep cameraName <<< "$DEVSTATHEAD" | cut -d ">" -f 2 | cut -d "<" -f 1)
 
 CAMLOG="$HOME/Nedlastinger/motion-$CAMERANAME-$SERIAL-$IPCAM.log"
 
