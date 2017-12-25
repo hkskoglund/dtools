@@ -1,9 +1,15 @@
 #!/bin/bash
 #Uses camera SD log to get mp4 files from camera
 #Known issues: will not get files if the log is cleared, i.e after reboot of camera
+#set -x 
+#trap read debug
 VIDDIR=$HOME/Videoklipp/sleeplab
-cd $VIDDIR
-IPCAM=$1
+
+if "cd $VIDDIR" -gt 0 ; then
+   echo "Failed to cd into $VIDDIR, using $PWD instead"
+  VIDDIR=$PWD;
+fi
+
 VERBOSE="-v"
 
 if [ -z "$1" ]; then
@@ -11,29 +17,39 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-DEFOPT="--anyauth -u admin: -s --compressed -e http://$IPCAM/"
+IPCAM=$1
+DEFOPT="-u admin: --anyauth -s --compressed -e http://$IPCAM/"
 
 DEVSTAT=$(curl $DEFOPT  "http://$IPCAM/eng/admin/st_device.cgi")
 #Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
 # head inserted in pipe chain to avoid write error (broken pipe) to pipe into grep -m 1 
-SERIAL=$(echo $DEVSTAT  | tr ' ' '\n' | head -n 15 |  grep serial | cut -d ">" -f 2 | cut -d "<" -f 1)
-CAMERANAME=$(echo $DEVSTAT | tr ' ' '\n' | head -n 15 | grep cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
+DEVSTATHEAD=$(echo "$DEVSTAT"  | tr ' ' '\n' | head -n 15)
+SERIAL=$(echo "$DEVSTATHEAD" |  grep serial | cut -d ">" -f 2 | cut -d "<" -f 1)
+CAMERANAME=$(echo "$DEVSTATHEAD" | grep cameraName | cut -d ">" -f 2 | cut -d "<" -f 1)
 
-MOTIONLOG="$HOME/Nedlastinger/motion-$CAMERANAME-$SERIAL-$IPCAM.log"
-
+CAMLOG="$HOME/Nedlastinger/motion-$CAMERANAME-$SERIAL-$IPCAM.log"
 
 # Max. command line size bash; getconf ARG_MAX
 #https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
-echo "Fetch log from $SERIAL camera $CAMERANAME at $IPCAM -> $MOTIONLOG"
-curl $DEFOPT --data 'export=true'  "http://$IPCAM/eng/admin/export_log.cgi"\
-  | tee $MOTIONLOG  | grep -E 'Motion'.*'SD Card is OK' | cut -d' ' -f4 \
-  | { while read FILENAME ; do FILEPATH=$SERIAL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;\
-        if [ ! -f $FILENAME ]; then URLS+="http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH ";\
-        #else echo "$FILENAME already downloaded"; 
-        fi\
-     done;\
-     if [ ${#URLS} -gt 0 ]; then echo "Fetching video from camera at $IPCAM";\
-        curl $DEFOPT -J  $VERBOSE --remote-name-all  $URLS;\
-     else  echo "No new videos, skipping download";\
-     fi }
-cd - >/dev/null
+
+echo "Fetch log from $SERIAL camera $CAMERANAME at $IPCAM -> $CAMLOG"
+
+MOTIONLOG=$(curl $DEFOPT --data 'export=true'  "http://$IPCAM/eng/admin/export_log.cgi" | tee "$CAMLOG"  | grep -E "Motion.*SD Card is OK" | cut -d' ' -f4)
+
+for FILENAME in $MOTIONLOG; do 
+ FILEPATH=$SERIAL/${FILENAME:0:8}/${FILENAME:9:2}/$FILENAME;
+  if [ ! -f "$FILENAME" ]; then 
+    URLS+="http://$IPCAM/cgi/admin/getSDFile.cgi?file=$FILENAME&path=$FILEPATH "
+  #else
+  # echo "$FILENAME already downloaded"; 
+  fi
+done;
+
+if [ ${#URLS} -gt 0 ]; then 
+  echo "Fetching video from camera at $IPCAM";
+  curl $DEFOPT -J  $VERBOSE --remote-name-all "$URLS"
+else  
+  echo "No new videos, skipping download"
+fi
+
+cd - >/dev/null || exit
