@@ -4,7 +4,6 @@ IPCAM=$1
 LENGTH=$2
 FILEBASE=$3
 STREAM=$4
-#IFPS=$4
 OFPS=$5
 
 OUTDIR=$HOME/Videoklipp/sleeplab
@@ -43,18 +42,18 @@ AUDIOLEVEL1=-45dB
 AUDIOLEVEL2=-35dB
 AUDIOLEVEL3=-25dB
 AUDIOFILTER="-af silenceremove=0:0:0:-1:1:$AUDIOLEVEL1 $OUTDIR/$(date +"20%y%m%d")_$FILEBASE$AUDIOLEVEL1.mp3 -af silenceremove=0:0:0:-1:1:$AUDIOLEVEL2 $OUTDIR/$(date +"20%y%m%d")_$FILEBASE$AUDIOLEVEL2.mp3 -af silenceremove=0:0:0:-1:1:$AUDIOLEVEL3 $OUTDIR/$(date +"20%y%m%d")_$FILEBASE$AUDIOLEVEL3.mp3"
-echo Audio filter: $AUDIOFILTER
-echo "Recording $LENGTH from $RTSP to $VIDEOFILE, input FPS $IFPS output FPS $OFPS"
-mv -v -f $VIDEOFILE $FILEBASE-backup.mp4
-mv -v -f $MP3FILE $FILEBASE-backup.mp3
+echo Audio filter: "$AUDIOFILTER"
+echo "Recording $LENGTH from $RTSP to $VIDEOFILE, output FPS $OFPS"
+mv -v -f "$VIDEOFILE" $FILEBASE-backup.mp4
+mv -v -f "$MP3FILE" $FILEBASE-backup.mp3
 if [ -z "$OFPS" ]; then
   # Let ffmpeg determine framerates
-  ffmpeg -y -t $LENGTH -i $RTSP $VIDEOFILE $MP3FILE $AUDIOFILTER
+  ffmpeg -y -t $LENGTH -i "$RTSP" "$VIDEOFILE" "$MP3FILE" "$AUDIOFILTER"
 #  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $LENGTH -i $RTSP $VIDEOFILE $MP3FILE $AUDIOFILTER
 
 else
   #Force specific output framerate
-  ffmpeg -y -t $LENGTH -i $RTSP -r $OFPS $VIDEOFILE $MP3FILE $AUDIOFILTER
+  ffmpeg -y -t $LENGTH -i "$RTSP" -r $OFPS "$VIDEOFILE" "$MP3FILE" "$AUDIOFILTER"
 fi
 
 echo "FFMPEG/RSL script exit statsus " $?
