@@ -1,31 +1,31 @@
 #!/bin/bash
 #Record sleep from camera, post process audio with silence removal and specific audio levels
-IPCAM=$1
-LENGTH=$2
-FILEBASE=$3
-STREAM=$4
-OFPS=$5
+ipadr=$1
+time=$2
+filebase=$3
+stream=$4
+ofps=$5
 
-OUTDIR=$HOME/Videoklipp/sleeplab
+outdir=$HOME/Videoklipp/sleeplab
 if [ "$1" == "-h" ]; then
-   echo "Arguments : LENGTH (10=10sec,08:00:00 8hours) FILEBASE (without extension) STREAM  (1/2/3)  output FPS  IPCAM (def 192.168.0.110) "
+   echo "Arguments : time (10=10sec,08:00:00 8hours) filebase (without suffix) stream  (1/2/3)  output FPS  ipadr (def 192.168.0.110) "
    exit 0
 fi
 if [ -z "$2" ]; then
-  LENGTH=09:00:00
+  time=09:00:00
 fi
 if [ -z "$3" ]; then
-  FILEBASE=sleep
+  filebase=sleep
 fi
 if [ -z "$4" ]; then
-  STREAM=1
+  stream=1
 fi
 # Only necessary for raw video files -> probably not applicable for rtsp stream from D-link cam DCS-936L
 #if [ -z "$4" ]; then
 #  IFPS=10
 #fi
 if [ -z "$5" ]; then
-  OFPS=30
+  ofps=30
 fi
 
 if [ -z "$1" ]; then
@@ -34,27 +34,27 @@ if [ -z "$1" ]; then
 fi
 #OUT=~/Videoklipp/sleeplab/$(date +"20%y%m%d")_sleep.mp4
 
-VIDEOFILE=$OUTDIR/$FILEBASE.mp4
-MP3FILE=$OUTDIR/$FILEBASE.mp3
-RTSP=rtsp://$IPCAM/play$STREAM.sdp
+videofile=$outdir/$filebase.mp4
+mp3file=$outdir/$filebase.mp3
+rtsp=rtsp://$ipadr/play$stream.sdp
 # http://192.168.0.110:80/av2/mjpg.cgi?profileid=3 - workaround for stream 3 DCS-936L firmware v1.5/works in firmware 1.2
-AUDIOLEVEL1=-45dB
-AUDIOLEVEL2=-35dB
-AUDIOLEVEL3=-25dB
-AUDIOFILTER="-af silenceremove=0:0:0:-1:1:$AUDIOLEVEL1 $OUTDIR/$(date +"20%y%m%d")_$FILEBASE$AUDIOLEVEL1.mp3 -af silenceremove=0:0:0:-1:1:$AUDIOLEVEL2 $OUTDIR/$(date +"20%y%m%d")_$FILEBASE$AUDIOLEVEL2.mp3 -af silenceremove=0:0:0:-1:1:$AUDIOLEVEL3 $OUTDIR/$(date +"20%y%m%d")_$FILEBASE$AUDIOLEVEL3.mp3"
-echo Audio filter: "$AUDIOFILTER"
-echo "Recording $LENGTH from $RTSP to $VIDEOFILE, output FPS $OFPS"
-mv -v -f "$VIDEOFILE" $FILEBASE-backup.mp4
-mv -v -f "$MP3FILE" $FILEBASE-backup.mp3
-if [ -z "$OFPS" ]; then
+audiolevel1=-45dB
+audiolevel2=-35dB
+audiolevel3=-25dB
+audiofilter="-af silenceremove=0:0:0:-1:1:$audiolevel1 $outdir/$(date +"20%y%m%d")_$filebase$audiolevel1.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel2 $outdir/$(date +"20%y%m%d")_$filebase$audiolevel2.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel3 $outdir/$(date +"20%y%m%d")_$filebase$audiolevel3.mp3"
+echo Audio filter: "$audiofilter"
+echo "Recording $time from $rtsp to $videofile, output FPS $ofps"
+mv -v -f "$videofile" $filebase-backup.mp4
+mv -v -f "$mp3file" $filebase-backup.mp3
+if [ -z "$ofps" ]; then
   # Let ffmpeg determine framerates
-  # Want word-splitting so that $AUDIOFILTER is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
-  ffmpeg -y -t $LENGTH -i "$RTSP" "$VIDEOFILE" "$MP3FILE" $AUDIOFILTER
-#  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $LENGTH -i $RTSP $VIDEOFILE $MP3FILE $AUDIOFILTER
+  # Want word-splitting so that $audiofilter is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
+  ffmpeg -y -t $time -i "$rtsp" "$videofile" "$mp3file" $audiofilter
+#  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $time -i $rtsp $videofile $mp3file $audiofilter
 
 else
   #Force specific output framerate
-  ffmpeg -y -t $LENGTH -i "$RTSP" -r "$OFPS" "$VIDEOFILE" "$MP3FILE" $AUDIOFILTER
+  ffmpeg -y -t $time -i "$rtsp" -r "$ofps" "$videofile" "$mp3file" $audiofilter
 fi
 
 echo "FFMPEG/RSL script exit statsus " $?
