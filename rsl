@@ -49,11 +49,13 @@ mv -v -f "$mp3file" $filebase-backup.mp3
 if [ -z "$ofps" ]; then
   # Let ffmpeg determine framerates
   # Want word-splitting so that $audiofilter is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
+  # shellcheck disable=2086
   ffmpeg -y -t $time -i "$rtsp" "$videofile" "$mp3file" $audiofilter
 #  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $time -i $rtsp $videofile $mp3file $audiofilter
 
 else
   #Force specific output framerate
+  # shellcheck disable=2086
   ffmpeg -y -t $time -i "$rtsp" -r "$ofps" "$videofile" "$mp3file" $audiofilter
 fi
 

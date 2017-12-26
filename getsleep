@@ -9,13 +9,14 @@ cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD instead"; viddir=$
 verbose="-v"
 
 if [ -z "$1" ]; then
-  echo "Usage: gsl {ip-addr}"
+  echo "Usage: gsl {ipadr}"
   exit 1
 fi
 
 ipadr=$1
 curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
 
+# shellcheck disable=2086
 devstat=$(curl $curlopt  "http://$ipadr/eng/admin/st_device.cgi")
 #Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
 # head inserted in pipe chain to avoid write error (broken pipe) to pipe into grep -m 1 
@@ -29,7 +30,7 @@ camlog="$HOME/Nedlastinger/$camname-$serial-$ipadr.log"
 #https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
 
 echo "Fetch log from $serial camera $camname at $ipadr -> $camlog"
-
+# shellcheck disable=2086
 motionlog=$(curl $curlopt --data 'export=true'  "http://$ipadr/eng/admin/export_log.cgi" | tee "$camlog"  | grep -E "Motion.*SD Card is OK" | cut -d' ' -f4)
 
 for filename in $motionlog; do 
@@ -43,6 +44,7 @@ done;
 
 if [ ${#urls} -gt 0 ]; then 
   echo "Fetching video from camera at $ipadr";
+  # shellcheck disable=2086
   curl $curlopt -J  $verbose --remote-name-all $urls
 else  
   echo "No new videos, skipping download"

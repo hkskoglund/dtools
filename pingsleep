@@ -1,11 +1,11 @@
 #!/bin/bash
 #ping camera as specific intervals
-INTERVAL=60
-IPCAM=$1
+interval=60
+ipadr=$1
 
-if [ -z $1 ]; then
-  echo "Usage: psl {ip-adr} {interval}"
+if [ -z "$1" ]; then
+  echo "Usage: psl {ipadr} {interval}"
   exit 1
 fi;
 
-ping -i $INTERVAL -D $IPCAM | while read pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" ; fi; done
+ping -i $interval -D "$ipadr" | while read -r pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" ; fi; done
