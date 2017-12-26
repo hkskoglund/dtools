@@ -2,61 +2,76 @@
 #Record sleep from camera, post process audio with silence removal and specific audio levels
 ipadr=$1
 time=$2
-filebase=$3
-stream=$4
-ofps=$5
+stream=$3
+ofps=30
 
-outdir=$HOME/Videoklipp/sleeplab
 if [ "$1" == "-h" ]; then
-   echo "Arguments : time (10=10sec,08:00:00 8hours) filebase (without suffix) stream  (1/2/3)  output FPS  ipadr (def 192.168.0.110) "
+   echo "Arguments :   ipadr {time} (10=10sec,08:00:00 8hours)  {playstream} (1/2/3)"
    exit 0
 fi
+
 if [ -z "$2" ]; then
   time=09:00:00
 fi
+
 if [ -z "$3" ]; then
-  filebase=sleep
-fi
-if [ -z "$4" ]; then
   stream=1
 fi
 # Only necessary for raw video files -> probably not applicable for rtsp stream from D-link cam DCS-936L
 #if [ -z "$4" ]; then
 #  IFPS=10
 #fi
-if [ -z "$5" ]; then
-  ofps=30
-fi
+
 
 if [ -z "$1" ]; then
-  echo "Usage: rsl {ip-adr} {length} {output-file} {stream} {fps}"
+  echo "Usage: rsl ipadr {time} {playstream} "
   exit 1 
 fi
+
+curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
+
+# shellcheck disable=2086
+devstat=$(curl $curlopt  "http://$ipadr/eng/admin/st_device.cgi")
+#Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
+# head inserted in pipe chain to avoid write error (broken pipe) to pipe into grep -m 1 
+devstathead=$(tr ' ' '\n' <<< "$devstat" | head -n 15)
+serial=$(grep serial <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
+camname=$(grep cameraName <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
+if [ -z "$camname" ]; then
+  camuniq=$serial-$ipadr
+else
+  camuniq=$camname-$serial-$ipadr
+fi
+
+guess_viddir=$(ls -d "$HOME"/*/ | grep -m 1 Video)
+viddir=$guess_viddir$camuniq
+cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
 #OUT=~/Videoklipp/sleeplab/$(date +"20%y%m%d")_sleep.mp4
 
-videofile=$outdir/$filebase.mp4
-mp3file=$outdir/$filebase.mp3
+vfile=$viddir/sleep.mp4
+afile=$viddir/sleep.mp3
 rtsp=rtsp://$ipadr/play$stream.sdp
 # http://192.168.0.110:80/av2/mjpg.cgi?profileid=3 - workaround for stream 3 DCS-936L firmware v1.5/works in firmware 1.2
+# calibrated with 100% mic gain in d-link web configuration and audacity DB levels
 audiolevel1=-45dB
 audiolevel2=-35dB
 audiolevel3=-25dB
-audiofilter="-af silenceremove=0:0:0:-1:1:$audiolevel1 $outdir/$(date +"20%y%m%d")_$filebase$audiolevel1.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel2 $outdir/$(date +"20%y%m%d")_$filebase$audiolevel2.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel3 $outdir/$(date +"20%y%m%d")_$filebase$audiolevel3.mp3"
+audiofilter="-af silenceremove=0:0:0:-1:1:$audiolevel1 $viddir/$(date +"20%y%m%d")_sleep$audiolevel1.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel2 $viddir/$(date +"20%y%m%d")_sleep$audiolevel2.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel3 $viddir/$(date +"20%y%m%d")_sleep$audiolevel3.mp3"
 echo Audio filter: "$audiofilter"
-echo "Recording $time from $rtsp to $videofile, output FPS $ofps"
-mv -v -f "$videofile" $filebase-backup.mp4
-mv -v -f "$mp3file" $filebase-backup.mp3
+echo "Recording $time from $rtsp to $vfile, output FPS $ofps"
+mv -v -f "$vfile" "$viddir"/sleep-backup.mp4
+mv -v -f "$afile" "$viddir"/sleep-backup.mp3
 if [ -z "$ofps" ]; then
   # Let ffmpeg determine framerates
   # Want word-splitting so that $audiofilter is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
   # shellcheck disable=2086
-  ffmpeg -y -t $time -i "$rtsp" "$videofile" "$mp3file" $audiofilter
-#  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $time -i $rtsp $videofile $mp3file $audiofilter
+  ffmpeg -y -t $time -i "$rtsp" "$vfile" "$afile" $audiofilter
+#  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $time -i $rtsp $vfile $afile $audiofilter
 
 else
   #Force specific output framerate
   # shellcheck disable=2086
-  ffmpeg -y -t $time -i "$rtsp" -r "$ofps" "$videofile" "$mp3file" $audiofilter
+  ffmpeg -y -t $time -i "$rtsp" -r "$ofps" "$vfile" "$afile" $audiofilter
 fi
 
 echo "FFMPEG/RSL script exit statsus " $?
