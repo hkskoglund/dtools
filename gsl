@@ -3,8 +3,7 @@
 #Known issues: will not get files if the log is cleared, i.e after reboot of camera
 #set -x 
 #trap read debug
-viddir=$HOME/Videoklipp/sleeplab
-cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD instead"; viddir=$PWD; }
+
 
 verbose="-v"
 
@@ -23,27 +22,40 @@ devstat=$(curl $curlopt  "http://$ipadr/eng/admin/st_device.cgi")
 devstathead=$(tr ' ' '\n' <<< "$devstat" | head -n 15)
 serial=$(grep serial <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
 camname=$(grep cameraName <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
+if [ -z "$camname" ]; then
+  camuniq=$serial-$ipadr
+else
+  camuniq=$camname-$serial-$ipadr
+fi
 
-camlog="$HOME/Nedlastinger/$camname-$serial-$ipadr.log"
+guess_viddir=$(ls -d "$HOME"/*/ | grep -m 1 Video)
+viddir=$guess_viddir$camuniq
+cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
+camlog="$guess_viddir$camuniq/camera.log"
+
 
 # Max. command line size bash; getconf ARG_MAX
 #https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
 
-echo "Fetch log from $serial camera $camname at $ipadr -> $camlog"
+echo "Log $serial camera $camname at $ipadr -> $camlog"
+echo "Video directory $serial camera $camname at $ipadr -> $viddir"
 # shellcheck disable=2086
 motionlog=$(curl $curlopt --data 'export=true'  "http://$ipadr/eng/admin/export_log.cgi" | tee "$camlog"  | grep -E "Motion.*SD Card is OK" | cut -d' ' -f4)
 
 for filename in $motionlog; do 
- path=$serial/${filename:0:8}/${filename:9:2}/$filename;
+
+  path=$serial/${filename:0:8}/${filename:9:2}/$filename
+  
   if [ ! -f "$filename" ]; then 
     urls+="http://$ipadr/cgi/admin/getSDFile.cgi?file=$filename&path=$path "
   #else
   # echo "$filename already downloaded"; 
   fi
-done;
+
+done
 
 if [ ${#urls} -gt 0 ]; then 
-  echo "Fetching video from camera at $ipadr";
+  echo "Fetching video from camera at $ipadr"
   # shellcheck disable=2086
   curl $curlopt -J  $verbose --remote-name-all $urls
 else  
