@@ -28,7 +28,7 @@ if [ -z "$1" ]; then
   exit 1 
 fi
 
-camuniq=$(sdir "$ipadr" | cut -d ' ' -f 1)
+read -r camuniq serial camname <<< $(sdir "$ipadr")
 guess_viddir=$(ls -d "$HOME"/*/ | grep -m 1 Video)
 viddir=$guess_viddir$camuniq
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }

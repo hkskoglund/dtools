@@ -12,10 +12,7 @@ if [ -z "$1" ]; then
 fi
 
 ipadr=$1
-sdir=$(sdir "$ipadr")
-camuniq=$(echo "$sdir" | cut -d ' ' -f 1)
-serial=$(echo "$sdir" | cut -d ' ' -f 2)
-camname=$(echo "$sdir" | cut -d ' ' -f 3)
+read -r camuniq serial camname <<< $(sdir "$ipadr")
 guess_viddir=$(ls -d "$HOME"/*/ | grep -m 1 Video)
 viddir=$guess_viddir$camuniq
 camlog="$guess_viddir$camuniq/camera.log"
