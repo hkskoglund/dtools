@@ -1,18 +1,31 @@
 #!/bin/bash
-ROTATE=$1
-STARTDAY=$2
-STOPDAY=$3
-if [ -z "$1" ]; then
-  ROTATE=180
+ipadr=$1
+
+if [ -z "$ipadr" ]; then
+  echo "Usage: msl ipadr {rotate} {start} {stopday} (1=yesterday,0=today)"
+  exit
 fi
+
+rotate=$2
+startday=$3
+stopday=$4
+
 if [ -z "$2" ]; then
-  STARTDAY=1
+  rotate=180
 fi
+
 if [ -z "$3" ]; then
-  STOPDAY=0
+  startday=1
 fi
-START=$(date +"20%y%m%d" -d "-$STARTDAY day")
-STOP=$(date +"20%y%m%d" -d "-$STOPDAY day")
-DIR=~/Videoklipp/sleeplab
-echo Playing motion videos from $START to $STOP \(rotated $ROTATE\)
-mpv --video-rotate $ROTATE $DIR/${START}_2{2..3}*.mp4 $DIR/${STOP}_{0..1}{0..9}*.mp4 --loop-playlist
+
+if [ -z "$4" ]; then
+  stopday=0
+fi
+
+start=$(date +"20%y%m%d" -d "-$startday day")
+stop=$(date +"20%y%m%d" -d "-$stopday day")
+
+# shellcheck disable=2034
+read -r viddir serial camname < <(sdir "$ipadr")
+echo Motion videos in "$viddir" from "$start" to "$stop" \(rotated $rotate\)
+mpv --video-rotate $rotate "$viddir/$start"_2{2..3}*.mp4 "$viddir/$stop"_{0..1}{0..9}*.mp4 --loop-playlist

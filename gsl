@@ -12,10 +12,8 @@ if [ -z "$1" ]; then
 fi
 
 ipadr=$1
-read -r camuniq serial camname <<< $(sdir "$ipadr")
-guess_viddir=$(ls -d "$HOME"/*/ | grep -m 1 Video)
-viddir=$guess_viddir$camuniq
-camlog="$guess_viddir$camuniq/camera.log"
+read -r viddir serial camname < <(sdir "$ipadr")
+camlog="$viddir/camera.log"
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
 
 # Max. command line size bash; getconf ARG_MAX

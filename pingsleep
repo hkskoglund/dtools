@@ -4,7 +4,7 @@ interval=60
 ipadr=$1
 
 if [ -z "$1" ]; then
-  echo "Usage: psl {ipadr} {interval}"
+  echo "Usage: psl ipadr {interval}"
   exit 1
 fi;
 

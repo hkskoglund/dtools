@@ -1,9 +1,11 @@
 #!/bin/bash
+
 if [ -z "$1" ]; then
-  echo "Usage: sdir ipadr  "
-  exit 1 
+  echo "Usage: sdir ipadr"
+  exit
+else
+  ipadr=$1
 fi
-ipadr=$1
 
 curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
 
@@ -14,9 +16,13 @@ devstat=$(curl $curlopt  "http://$ipadr/eng/admin/st_device.cgi")
 devstathead=$(tr ' ' '\n' <<< "$devstat" | head -n 15)
 serial=$(grep serial <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
 camname=$(grep cameraName <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
+
 if [ -z "$camname" ]; then
   camuniq=$serial-$ipadr
 else
   camuniq=$camname-$serial-$ipadr
 fi
-echo $camuniq $serial $camname
+
+guess_viddir=$(grep -m 1 Video <(ls -d "$HOME"/*/))
+viddir=$guess_viddir$camuniq
+echo "$viddir" "$serial" "$camname"

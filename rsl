@@ -1,5 +1,11 @@
 #!/bin/bash
-#Record sleep from camera, post process audio with silence removal and specific audio levels
+#Record sleep from camera, post process audio with silence removal and filter on specific audio dB levels
+
+if [ -z "$1" ]; then
+  echo "Usage: rsl ipadr {time} {playstream} "
+  exit 1 
+fi
+
 ipadr=$1
 time=$2
 stream=$3
@@ -17,20 +23,14 @@ fi
 if [ -z "$3" ]; then
   stream=1
 fi
+
 # Only necessary for raw video files -> probably not applicable for rtsp stream from D-link cam DCS-936L
 #if [ -z "$4" ]; then
 #  IFPS=10
 #fi
 
-
-if [ -z "$1" ]; then
-  echo "Usage: rsl ipadr {time} {playstream} "
-  exit 1 
-fi
-
-read -r camuniq serial camname <<< $(sdir "$ipadr")
-guess_viddir=$(ls -d "$HOME"/*/ | grep -m 1 Video)
-viddir=$guess_viddir$camuniq
+# shellcheck disable=2034
+read -r viddir serial camname <  <(sdir "$ipadr")
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
 #OUT=~/Videoklipp/sleeplab/$(date +"20%y%m%d")_sleep.mp4
 
@@ -38,22 +38,25 @@ vfile=$viddir/sleep.mp4
 afile=$viddir/sleep.mp3
 rtsp=rtsp://$ipadr/play$stream.sdp
 # http://192.168.0.110:80/av2/mjpg.cgi?profileid=3 - workaround for stream 3 DCS-936L firmware v1.5/works in firmware 1.2
+
 # calibrated with 100% mic gain in d-link web configuration and audacity DB levels
 audiolevel1=-45dB
 audiolevel2=-35dB
 audiolevel3=-25dB
 audiofilter="-af silenceremove=0:0:0:-1:1:$audiolevel1 $viddir/$(date +"20%y%m%d")_sleep$audiolevel1.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel2 $viddir/$(date +"20%y%m%d")_sleep$audiolevel2.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel3 $viddir/$(date +"20%y%m%d")_sleep$audiolevel3.mp3"
+
 echo Audio filter: "$audiofilter"
 echo "Recording $time from $rtsp to $vfile, output FPS $ofps"
+
 mv -v -f "$vfile" "$viddir"/sleep-backup.mp4
 mv -v -f "$afile" "$viddir"/sleep-backup.mp3
+
 if [ -z "$ofps" ]; then
   # Let ffmpeg determine framerates
   # Want word-splitting so that $audiofilter is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
   # shellcheck disable=2086
   ffmpeg -y -t $time -i "$rtsp" "$vfile" "$afile" $audiofilter
 #  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $time -i $rtsp $vfile $afile $audiofilter
-
 else
   #Force specific output framerate
   # shellcheck disable=2086
