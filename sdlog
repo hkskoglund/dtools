@@ -1,2 +1,23 @@
 #!/bin/bash
-curl -u admin: --compressed 'http://192.168.0.110/eng/admin/export_log.cgi'  -H 'Referer: http://192.168.0.110/eng/web_log.cgi' --data 'export=true' -s
+if [ -z "$1" ]; then
+  echo "Usage: sdlog ipadr"
+  exit
+fi
+
+ipadr=$1
+ping -c 1 "$ipadr" || exit $?
+curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
+
+# shellcheck disable=2034
+read -r viddir serial camname < <(sdir "$ipadr")
+
+case $serial in
+   DCS-936L)
+     dlink_export_log=http://$ipadr/eng/admin/export_log.cgi
+     ;;
+    *)
+    dlink_export_log=http://$ipadr/eng/admin/export_log.cgi
+esac
+
+# shellcheck disable=2086
+curl $curlopt --data 'export=true' $dlink_export_log

@@ -1,0 +1,11 @@
+#!/bin/bash
+# Strips off Author section from Polar TCX export, thats somewhat incompatible with current garmin connect import
+
+if [ ! -f "$1" ]; then
+  pwd
+  echo "$1" does not exists
+  exit
+fi
+
+echo "$1" Removing XML-element Author for compatibility with Garmin Connect manual import
+echo "$(head -c -316 "$1")</TrainingCenterDatabase>" > "$1"

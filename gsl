@@ -12,6 +12,8 @@ if [ -z "$1" ]; then
 fi
 
 ipadr=$1
+ping -c 1 "$ipadr" || exit $?
+
 read -r viddir serial camname < <(sdir "$ipadr")
 camlog="$viddir/camera.log"
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
@@ -23,15 +25,25 @@ echo "Log $serial camera $camname at $ipadr -> $camlog"
 echo "Video directory $serial camera $camname at $ipadr -> $viddir"
 curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
 
-# shellcheck disable=2086
-motionlog=$(curl $curlopt --data 'export=true'  "http://$ipadr/eng/admin/export_log.cgi" | tee "$camlog"  | grep -E "Motion.*SD Card is OK" | cut -d' ' -f4)
+case $serial in
+   DCS-936L)
+     dlink_getSDFile=http://$ipadr/cgi/admin/getSDFile.cgi
+     ;;
+    *)
+    dlink_getSDFile=http://$ipadr/cgi/admin/getSDFile.cgi
 
-for filename in $motionlog; do 
+esac
+
+#mlog output format: 2017-12-28 07:11:10 Recording 20171228_071100.mp4 by Motion Detection to SD Card is OK.
+# shellcheck disable=2086
+mp4_videos=$(mlog $ipadr | cut -d' ' -f4)
+
+for filename in $mp4_videos; do 
 
   path=$serial/${filename:0:8}/${filename:9:2}/$filename
   
   if [ ! -f "$filename" ]; then 
-    urls+="http://$ipadr/cgi/admin/getSDFile.cgi?file=$filename&path=$path "
+    urls+="$dlink_getSDFile?file=$filename&path=$path "
   #else
   # echo "$filename already downloaded"; 
   fi

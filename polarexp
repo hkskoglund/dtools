@@ -1,0 +1,33 @@
+#!/bin/bash
+cd ~/Nedlastinger || echo "Warning: exported files stored in $PWD"
+
+fromDate=$1
+toDate=$2
+
+if [ -z "$1" ]; then
+  fromDate=$(date +%Y-%m-%d)
+fi
+
+if [ -z "$2" ]; then
+  toDate=$(date +%Y-%m-%d)
+fi
+
+POLAR_SESSION=eyJhbGciOiJSUzI1NiJ9.eyJzY29wZXMiOlsiUE9MQVJfU1NPIl0sImV4cCI6MTUzODU1NDgyNSwiaWF0IjoxNTA3MDE4ODI1LCJ1c2VySWQiOjM4NjcyMTAzLCJ1dWlkIjoiMmZiZjRkNDktMTZlYy00ODJkLTg5OWItZjM5MzAxZjE0MGEyIn0.Uqrxkep7nVL-SRrUD-8-M2RpXhPh5X8jJb-Nydk0VVY1WwsJgG3U12X9rvvdtmjuSfGlXUcAMtr2eq-5gxoYiVjjItOhX4RrFJBodAjW1Cuh06Nr5E6GiA8mvnGF-7-VUqutM8Ch6GIKdisS61xUYac_iAW0ywAs8ii_0oW_Jsm2f-PHA6Doi_9PAlZOJBu1niAuN5eitc3w3StVKUgzBmUfMPdamKpW2CZvJpbFCc8u6LZh_mUGzNE_jyLb_1JCrBOZICyg4zxMuEi96IvHThsfzsO0tRGh6trG0LNdFJSojm8gveKyC4HfbI93qYActKtu6UMoHJhze8o86yVMbg
+
+curl 'https://flow.polar.com/api/training/history' \
+   -H "Cookie: POLAR_SSO=1; POLAR_SESSION=$POLAR_SESSION" \
+   -H 'Origin: https://flow.polar.com' \
+   -H 'Content-Type: application/json' \
+   -H 'Referer: https://flow.polar.com/diary/training-list' \
+   --data-binary "{\"userId\":38672103,\"fromDate\":\"$fromDate\",\"toDate\":\"$toDate\",\"sportIds\":[]}" \
+   --compressed \
+   -s \
+   --trace-ascii /dev/stdout | tr ',' '\n' | grep 'id"' | cut -d ':' -f 2 \
+   | while read -r id; do \
+      #curl -v "https://flow.polar.com/api/export/training/tcx/$id" -e 'https://flow.polar.com' -H "Cookie: POLAR_SSO=1; POLAR_SESSION=$POLAR_SESSION" -O -J\
+
+      tcxfile=$(curl -v "https://flow.polar.com/api/export/training/tcx/$id" -e 'https://flow.polar.com' -H "Cookie: POLAR_SSO=1; POLAR_SESSION=$POLAR_SESSION" -O -J  2>&1 | grep 'Content.*filename' | cut -d';' -f 2 | cut -d'=' -f2 | tr -d \'\");\
+      if [ ! -z "$tcxfile" ]; then if ! fixtcxtail "$tcxfile"; then echo $? "Failed to remove Author-tag in TCX file"; fi fi \
+     done
+
+cd - >/dev/null || exit

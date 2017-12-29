@@ -1,5 +1,6 @@
 #!/bin/bash
 ipadr=$1
+ping -c 1 "$ipadr" || exit $?
 
 if [ -z "$ipadr" ]; then
   echo "Usage: msl ipadr {rotate} {start} {stopday} (1=yesterday,0=today)"
