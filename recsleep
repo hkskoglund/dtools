@@ -28,10 +28,11 @@ fi
 # shellcheck disable=2034
 read -r viddir serial camname <  <(sdir "$ipadr")
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
-#OUT=~/Videoklipp/sleeplab/$(date +"20%y%m%d")_sleep.mp4
 
-vfile=$viddir/sleep.mp4
-afile=$viddir/sleep.mp3
+today=$(date +"20%y%m%d")
+
+vfile=$viddir/$today-sleep.mp4
+afile=$viddir/$today-sleep.mp3
 
 avstat=$(avstat "$ipadr")
 
@@ -52,32 +53,29 @@ esac
 readarray fps < <(echo "$avstat" | grep fps | cut -d'>' -f2 | cut -'d<' -f1)
 ofps=${fps[$stream - 1 ]}
 
-today=$(date +"20%y%m%d")
+
 # calibrated with 100% mic gain in d-link web configuration and audacity spectogram
 audiolevels="-45dB -35dB -25dB"
 # Filter high freq noise
 lowpass_freq=1000
 
 for audiolevel in $audiolevels; do 
-  audiofilter+="-af lowpass=f=$lowpass_freq, silenceremove=0:0:0:-1:1:$audiolevel $viddir/${today}_sleep$audiolevel.mp3 "
+  audiofilter+=" -af lowpass=f=$lowpass_freq,silenceremove=0:0:0:-1:1:$audiolevel $viddir/${today}_sleep$audiolevel.mp3"
 done;
 
-echo Audio filter: "$audiofilter"
-echo "Recording $time from $dlink_rtsp to $vfile, output FPS $ofps"
-
-mv -v -f "$vfile" "$viddir"/sleep-backup.mp4
-mv -v -f "$afile" "$viddir"/sleep-backup.mp3
+#mv -v -f "$vfile" "$viddir"/$today-sleep-backup.mp4
+#mv -v -f "$afile" "$viddir"/$today-sleep-backup.mp3
 
 if [ -z "$ofps" ]; then
   # Let ffmpeg determine framerates
   # Want word-splitting so that $audiofilter is represented as several arguments http://tldp.org/LDP/abs/html/quotingvar.html
   # shellcheck disable=2086
-  ffmpeg -y -t $time -i "$dlink_rtsp" "$vfile" "$afile" $audiofilter
+  ffmpeg -y -t $time -i $dlink_rtsp "$vfile" "$afile" $audiofilter
 #  FFREPORT=file=ffmpeg-sleep.log ffmpeg -y -loglevel verbose -t $time -i $rtsp $vfile $afile $audiofilter
 else
   #Force specific output framerate
   # shellcheck disable=2086
-  ffmpeg -y -t $time -i "$dlink_rtsp" -r "$ofps" "$vfile" "$afile" $audiofilter
+  ffmpeg -y -t $time -i $dlink_rtsp -r $ofps "$vfile" "$afile" $audiofilter
 fi
 
 echo "FFMPEG/RSL script exit statsus " $?
