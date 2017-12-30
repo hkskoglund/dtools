@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+  echo "Usage: avstat ipadr"
+  exit
+else
+  ipadr=$1
+fi
+
+ping -c 1 "$ipadr" >/dev/null  || exit $?
+
+curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
+
+# shellcheck disable=2086
+curl $curlopt  "http://$ipadr/eng/admin/adv_audiovideo.cgi"

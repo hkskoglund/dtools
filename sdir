@@ -9,17 +9,11 @@ fi
 
 ping -c 1 "$ipadr" >/dev/null  || exit $?
 
-curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
-
 # shellcheck disable=2086
-devstat=$(curl $curlopt  "http://$ipadr/eng/admin/st_device.cgi")
+devstathead=$(sstat $ipadr 2>/dev/null | head -n 15)
 
 #Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
-# head inserted in pipe chain to avoid write error (broken pipe) to pipe into grep -m 1
 
-devstattr=$(tr ' ' '\n' <<< "$devstat")
-# Avoid tr: write error: broken pipe -> store complete result of tr beforehand and then echo
-devstathead=$(echo "$devstattr" | head -n 15)
 serial=$(grep serial <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
 camname=$(grep cameraName <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
 

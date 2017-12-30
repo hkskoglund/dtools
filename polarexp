@@ -25,8 +25,8 @@ curl 'https://flow.polar.com/api/training/history' \
    --trace-ascii /dev/stdout | tr ',' '\n' | grep 'id"' | cut -d ':' -f 2 \
    | while read -r id; do \
       #curl -v "https://flow.polar.com/api/export/training/tcx/$id" -e 'https://flow.polar.com' -H "Cookie: POLAR_SSO=1; POLAR_SESSION=$POLAR_SESSION" -O -J\
-
-      tcxfile=$(curl -v "https://flow.polar.com/api/export/training/tcx/$id" -e 'https://flow.polar.com' -H "Cookie: POLAR_SSO=1; POLAR_SESSION=$POLAR_SESSION" -O -J  2>&1 | grep 'Content.*filename' | cut -d';' -f 2 | cut -d'=' -f2 | tr -d \'\");\
+      tcxfile=$(curl -v "https://flow.polar.com/api/export/training/tcx/$id" -e 'https://flow.polar.com' -H "Cookie: POLAR_SSO=1; POLAR_SESSION=$POLAR_SESSION" -O -J  |& grep 'Content.*filename' | cut -d';' -f 2 | cut -d'=' -f2 | tr -d \'\");\
+      echo Fetched "$tcxfile https://flow.polar.com/api/export/training/tcx/$id"; \
       if [ ! -z "$tcxfile" ]; then if ! fixtcxtail "$tcxfile"; then echo $? "Failed to remove Author-tag in TCX file"; fi fi \
      done
 

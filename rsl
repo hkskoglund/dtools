@@ -7,14 +7,10 @@ if [ -z "$1" ]; then
 fi
 
 ipadr=$1
+ping -c 1 "$ipadr" || exit $?
+
 time=$2
 stream=$3
-ofps=30
-
-if [ "$1" == "-h" ]; then
-   echo "Arguments :   ipadr {time} (10=10sec,08:00:00 8hours)  {playstream} (1/2/3)"
-   exit 0
-fi
 
 if [ -z "$2" ]; then
   time=09:00:00
@@ -23,8 +19,6 @@ fi
 if [ -z "$3" ]; then
   stream=1
 fi
-
-ping -c 1 "$ipadr" || exit $?
 
 # Only necessary for raw video files -> probably not applicable for rtsp stream from D-link cam DCS-936L
 #if [ -z "$4" ]; then
@@ -39,23 +33,34 @@ cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then 
 vfile=$viddir/sleep.mp4
 afile=$viddir/sleep.mp3
 
+avstat=$(avstat "$ipadr")
+
+readarray rtsp_url < <(echo "$avstat" | grep url | cut -d'>' -f2 | cut -'d<' -f1)
+rtsp_stream=${rtsp_url[$stream - 1]}
+    
 case $serial in
   DCS-936L)
-     dlink_rtsp=rtsp://$ipadr/play$stream.sdp
+     dlink_rtsp=rtsp://$ipadr/$rtsp_stream
      # http://192.168.0.110:80/av2/mjpg.cgi?profileid=3 - workaround for stream 3 DCS-936L firmware v1.5/works in firmware 1.2
 
      ;;
   *)
-     dlink_rtsp=rtsp://$ipadr/play$stream.sdp
-
+     dlink_rtsp=rtsp://$ipadr/$rtsp_stream
+     ;;
 esac
 
+readarray fps < <(echo "$avstat" | grep fps | cut -d'>' -f2 | cut -'d<' -f1)
+ofps=${fps[$stream - 1 ]}
 
-# calibrated with 100% mic gain in d-link web configuration and audacity DB levels
-audiolevel1=-45dB
-audiolevel2=-35dB
-audiolevel3=-25dB
-audiofilter="-af silenceremove=0:0:0:-1:1:$audiolevel1 $viddir/$(date +"20%y%m%d")_sleep$audiolevel1.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel2 $viddir/$(date +"20%y%m%d")_sleep$audiolevel2.mp3 -af silenceremove=0:0:0:-1:1:$audiolevel3 $viddir/$(date +"20%y%m%d")_sleep$audiolevel3.mp3"
+today=$(date +"20%y%m%d")
+# calibrated with 100% mic gain in d-link web configuration and audacity spectogram
+audiolevels="-45dB -35dB -25dB"
+# Filter high freq noise
+lowpass_freq=1000
+
+for audiolevel in $audiolevels; do 
+  audiofilter+="-af lowpass=f=$lowpass_freq, silenceremove=0:0:0:-1:1:$audiolevel $viddir/${today}_sleep$audiolevel.mp3 "
+done;
 
 echo Audio filter: "$audiofilter"
 echo "Recording $time from $dlink_rtsp to $vfile, output FPS $ofps"

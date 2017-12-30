@@ -4,8 +4,8 @@
 if [ ! -f "$1" ]; then
   pwd
   echo "$1" does not exists
-  exit
+  exit 1
 fi
 
-echo "$1" Removing XML-element Author for compatibility with Garmin Connect manual import
+#echo "$1" Removing XML-element Author for compatibility with Garmin Connect manual import
 echo "$(head -c -316 "$1")</TrainingCenterDatabase>" > "$1"
