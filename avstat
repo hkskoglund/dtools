@@ -1,4 +1,5 @@
 #!/bin/bash
+#Only tested on firmware 1.5 for DCS-936L camera
 
 if [ -z "$1" ]; then
   echo "Usage: avstat ipadr"

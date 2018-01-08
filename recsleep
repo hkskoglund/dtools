@@ -20,13 +20,10 @@ if [ -z "$3" ]; then
   stream=1
 fi
 
-# Only necessary for raw video files -> probably not applicable for rtsp stream from D-link cam DCS-936L
-#if [ -z "$4" ]; then
-#  IFPS=10
-#fi
-
 # shellcheck disable=2034
-read -r viddir serial camname <  <(sdir "$ipadr")
+#read -r viddir serial camname <  <(sdir "$ipadr")
+guess_viddir=$(grep -m 1 Video <(ls -d "$HOME"/*/))
+viddir=$guess_viddir/camera-$ipadr
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
 
 today=$(date +"20%y%m%d")
@@ -34,25 +31,25 @@ today=$(date +"20%y%m%d")
 vfile=$viddir/$today-sleep.mp4
 afile=$viddir/$today-sleep.mp3
 
-avstat=$(avstat "$ipadr")
 
-readarray rtsp_url < <(echo "$avstat" | grep url | cut -d'>' -f2 | cut -'d<' -f1)
-rtsp_stream=${rtsp_url[$stream - 1]}
-    
 case $serial in
   DCS-936L)
+     #avstat=$(avstat "$ipadr")
+     #readarray rtsp_url < <(echo "$avstat" | grep url | cut -d'>' -f2 | cut -'d<' -f1)
+     #rtsp_stream=${rtsp_url[$stream - 1]}
+     
+     rtsp_stream=play$stream.sdp
      dlink_rtsp=rtsp://$ipadr/$rtsp_stream
      # http://192.168.0.110:80/av2/mjpg.cgi?profileid=3 - workaround for stream 3 DCS-936L firmware v1.5/works in firmware 1.2
 
+     readarray fps < <(echo "$avstat" | grep fps | cut -d'>' -f2 | cut -'d<' -f1)
+     ofps=${fps[$stream - 1 ]}
      ;;
   *)
+     rtsp_stream=live$stream.sdp
      dlink_rtsp=rtsp://$ipadr/$rtsp_stream
      ;;
 esac
-
-readarray fps < <(echo "$avstat" | grep fps | cut -d'>' -f2 | cut -'d<' -f1)
-ofps=${fps[$stream - 1 ]}
-
 
 # calibrated with 100% mic gain in d-link web configuration and audacity spectogram
 audiolevels="-45dB -35dB -25dB"

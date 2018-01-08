@@ -1,2 +1,2 @@
 #!/bin/bash
-sdlog | grep -E 'Motion' | tail -n 150 | tac | nl
+dlog | grep -E 'Motion' | tail -n 150 | tac | nl

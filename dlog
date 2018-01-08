@@ -1,0 +1,31 @@
+#!/bin/bash
+
+[[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && ip=${BASH_REMATCH[0]}
+
+if [ -z "$ip" ]; then
+  printf "Usage: dlog [-m] ip\n\t-m motion detection only\n"
+  exit
+fi
+
+[[ $@ =~ "-m" ]] && motionopt=${BASH_REMATCH[0]}
+#motionopt=$(grep -oE "\-m" <<< "$@")
+
+ping -c 1 "$ip" || exit $?
+
+server=$(getserver "$ip")
+
+case $server in
+  Embedthis-Appweb*)
+    [[ ! -z "$motionopt" ]] && pipequery="| grep -E 'Event.*motion'"
+    eval dreq "http://$ip/cgi-bin/exportlog.cgi" $pipequery
+     ;;
+
+  dcs-lig-httpd*)
+    [[ ! -z "$motionopt" ]] && pipequery="| grep -E 'Motion.*SD Card is OK'"
+     eval dreq --data 'export=true' "http://$ip/eng/admin/export_log.cgi" $pipequery
+     ;;
+  *)
+     printf "dlog: Server %s not supported\n" "$server"
+     exit 1
+     ;;   
+esac

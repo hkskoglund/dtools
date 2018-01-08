@@ -1,16 +1,16 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-  echo "Usage: sdir ipadr"
+  echo "Usage: sdir ip"
   exit
 else
-  ipadr=$1
+  [[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && ip=${BASH_REMATCH[0]}$1
 fi
 
-ping -c 1 "$ipadr" >/dev/null  || exit $?
+ping -c 1 "$ip" >/dev/null  || exit $?
 
 # shellcheck disable=2086
-devstathead=$(sstat $ipadr 2>/dev/null | head -n 15)
+devstathead=$(sstat $ip 2>/dev/null | head -n 15)
 
 #Serial (used as directory) should be next level from root directory on camera SD card, otherwise access problems will occur "501 not implemented" response
 
@@ -18,9 +18,9 @@ serial=$(grep serial <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
 camname=$(grep cameraName <<< "$devstathead" | cut -d ">" -f 2 | cut -d "<" -f 1)
 
 if [ -z "$camname" ]; then
-  camuniq=$serial-$ipadr
+  camuniq=$serial-$ip
 else
-  camuniq=$camname-$serial-$ipadr
+  camuniq=$camname-$serial-$ip
 fi
 
 guess_viddir=$(grep -m 1 Video <(ls -d "$HOME"/*/))

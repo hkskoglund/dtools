@@ -8,4 +8,7 @@ if [ ! -f "$1" ]; then
 fi
 
 #echo "$1" Removing XML-element Author for compatibility with Garmin Connect manual import
-echo "$(head -c -316 "$1")</TrainingCenterDatabase>" > "$1"
+# Only author-tag cutoff=316
+tcxfile=$(cat "$1")
+num_track=$(grep -mw Track <(echo "$tcxfile"))
+echo "$(head -c - "$1")</TrainingCenterDatabase>" > "$1"

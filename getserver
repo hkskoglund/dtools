@@ -1,0 +1,12 @@
+#!/bin/bash
+#get dlink web server from Server http response header
+
+if [ -z "$1" ]; then
+  echo "Usage: getserver ip"
+  exit 1
+fi
+
+# Use Server-field in http response?
+# Server: dcs-lig-httpd               DCS-936L
+# Server: Embedthis-Appweb/3.3.1      DCS-2530L
+curl --head $1  2>&1 | grep Server | cut -d' ' -f2

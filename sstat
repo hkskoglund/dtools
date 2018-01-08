@@ -1,15 +1,15 @@
 #!/bin/bash
 
 if [ -z "$1" ]; then
-  echo "Usage: sstat ipadr"
+  echo "Usage: sstat ip"
   exit
 else
-  ipadr=$1
+  [[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && ip=${BASH_REMATCH[0]}
 fi
 
-ping -c 1 "$ipadr" >/dev/null  || exit $?
+ping -c 1 "$ip" >/dev/null  || exit $?
 
-curlopt="-u admin: --anyauth -s --compressed -e http://$ipadr/"
+curlopt="-u admin:$(getpassw "$ip") --anyauth -s --compressed -e http://$ip/"
 
 # shellcheck disable=2086
-curl $curlopt  "http://$ipadr/eng/admin/st_device.cgi"
+curl $curlopt  "http://$ip/eng/admin/st_device.cgi"

@@ -1,0 +1,104 @@
+#!/bin/bash
+
+#ip=$(grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" <<< "$@" | head -1)
+[[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && { ip=${BASH_REMATCH[0]}; set -- ${@#$ip}; }
+
+[[ -z "$ip" ]] && { echo "Usage: dcp [-d] [-l] ip {dir ...}"; printf "\t-l long format\n\t-d only show directories and files\n"; exit 1; }
+
+[[ $@ =~ -l ]] && { longformatopt=${BASH_REMATCH[0]}; set -- ${@#$longformatopt}; }
+[[ $@ =~ -d ]] && { nodownload=${BASH_REMATCH[0]}; set -- ${@#$nodownload}; }
+
+#longformatopt=$(grep -oE "\-l" <<< "$@")
+
+dir=$1
+
+[[ -z "$dir" ]] && set /
+
+server=$(getserver "$ip")
+
+function print_dir
+{
+  #format: var g_folderslistStr = GV("Picture;1;0;null;0;0;0;1514898228;0,Video;1;0;null;5;0;0;1515193747;0","")
+  #format: var g_filelistStr = decodeURIComponent(GV("p1_20180104_090009.jpg;0;0;56;0;0;0;1515052811;0,
+     
+  readarray -d ',' list <<< "$1"
+
+  for item in ${list[*]}; do
+    IFS=";" read -r -d, -a dprop <<< "$item" 
+    
+    timestamp=$(date --date @"${dprop[7]}" +'%b %e %T')
+
+    if [[ ! -z "$longformatopt" ]]; then
+      if [[ "${dprop[1]}" == "1" ]]; then
+        attr="drwxrwxr--";
+      else
+        attr="-r--r--r--"
+        pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
+        #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
+      fi
+      [[ $nodownload ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
+    else
+      [[ $nodownload ]] && echo "${dprop[0]}"
+    fi
+
+  done
+ 
+}
+
+case $server in
+   
+   Embedthis-Appweb*)
+      
+      #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
+      sdfpp=3
+
+      dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null
+
+      dirfiles=
+      
+      while (( "$#" )); do
+        
+        dir=$1
+
+        totalpages=1
+        page=0
+
+        pagefiles=
+
+        until [ $page -ge $totalpages ]; do
+        
+          ((page++))
+         
+          if [[ $(dreq "http://$ip/cgi-bin/sdoperate.cgi?list=&path=$dir&page=$page") == *"500 Internal Error"* ]]; then
+             # Trying to access non-existent directory gives "500 Internal Error" response
+         
+              echo "Failed to open '$dir': 500 Internal Error"
+              continue
+          fi
+         
+          # file/dir-names for each page are embedded in variables inside Javascript <script>-tag
+
+          readarray var <<< "$(grep -E "(^var g_totalpage|^var g_folderslistStr|^var g_filelistStr)" <(dreq "http://$ip/setup_sdlist.htm") | cut -d'"' -f2)"
+
+          totalpages=${var[0]}
+
+          print_dir "${var[1]}"
+          print_dir "${var[2]}"
+              
+        done
+
+        dirfiles+=$pagefiles
+
+        [[ ! -z $dirfiles && ! $nodownload ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
+
+        shift;
+
+    done
+
+    ;;
+    
+    dcs-lig-httpd*)
+    
+      #getSDFile-dcs-lig-httpd
+      ;;
+esac

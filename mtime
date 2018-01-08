@@ -1,0 +1,40 @@
+#!/bin/bash
+#calculates time difference between trigger and recover events for entire camera syslog
+#tested on: DCS-2530L
+
+[[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && ip=${BASH_REMATCH[0]}
+
+if [ -z "$ip" ]; then
+  echo "Usage: mtime ip"
+  exit 1
+fi
+
+server=$(getserver "$ip")
+
+case $server in
+   
+   Embedthis-Appweb*)
+
+        mlog "$ip" \
+        | while read -r date1 time1 eventh1 event1 rest1; do
+            
+            if [ "$event1" != "trigger" ]; then 
+             continue; 
+            fi; 
+            
+            read -r date2 time2 eventh2 event2 rest2
+            
+            sec1970_2=$(date -d "$date2 $time2" '+%s')
+            sec1970_1=$(date -d "$date1 $time1" '+%s')
+            
+            echo "$(( "$sec1970_1" * 1000)) $(( "$sec1970_2" * 1000)) $date1 $time1 $time2 $(printf "%2d" $(( "$sec1970_2" - "$sec1970_1" )))"
+        done 
+        ;;
+
+    *)
+
+      echo "Server not supported: $server"
+      exit 1
+      ;;
+
+esac
