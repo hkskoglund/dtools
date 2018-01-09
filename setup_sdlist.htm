@@ -1,0 +1,7 @@
+var g_totalpage = parseInt(GV("1",1));
+
+//name;filetype;eventtype;size;numoffiles;property;operator;date;time;reserve
+var g_folderslistStr = GV("Picture;1;0;null;0;0;0;1514898228;0,Video;1;0;null;5;0;0;1515193747;0","");
+var l_folders = g_folderslistStr.split(",");
+//var g_filelistStr = "2000-01-01 00:00:00.jpg;Jpeg;Motion;15000;0;0;Admin;2000\\01\\01;00:00:00;Test File");
+var g_filelistStr = decodeURIComponent(GV("",""));

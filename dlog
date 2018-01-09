@@ -3,7 +3,7 @@
 [[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && ip=${BASH_REMATCH[0]}
 
 if [ -z "$ip" ]; then
-  printf "Usage: dlog [-m] ip\n\t-m motion detection only\n"
+  printf "Usage: $(basename "$0") [-m] ip\n\t-m motion detection only\n"
   exit
 fi
 

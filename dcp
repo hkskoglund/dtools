@@ -3,7 +3,7 @@
 #ip=$(grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" <<< "$@" | head -1)
 [[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && { ip=${BASH_REMATCH[0]}; set -- ${@#$ip}; }
 
-[[ -z "$ip" ]] && { echo "Usage: dcp [-d] [-l] ip {dir ...}"; printf "\t-l long format\n\t-d only show directories and files\n"; exit 1; }
+[[ -z "$ip" ]] && { echo "Usage: $(basename "$0") [-d] [-l] ip {dir ...}"; printf "\t-l long format\n\t-d only list directories and files\n"; exit 1; }
 
 [[ $@ =~ -l ]] && { longformatopt=${BASH_REMATCH[0]}; set -- ${@#$longformatopt}; }
 [[ $@ =~ -d ]] && { nodownload=${BASH_REMATCH[0]}; set -- ${@#$nodownload}; }
@@ -28,14 +28,15 @@ function print_dir
     
     timestamp=$(date --date @"${dprop[7]}" +'%b %e %T')
 
-    if [[ ! -z "$longformatopt" ]]; then
-      if [[ "${dprop[1]}" == "1" ]]; then
-        attr="drwxrwxr--";
+    if [[ "${dprop[1]}" == "1" ]]; then
+        attr="drwxrwxr--"
       else
         attr="-r--r--r--"
         pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
         #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
-      fi
+    fi
+
+    if [[ ! -z "$longformatopt" ]]; then
       [[ $nodownload ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
     else
       [[ $nodownload ]] && echo "${dprop[0]}"
@@ -64,6 +65,7 @@ case $server in
         page=0
 
         pagefiles=
+        dirfiles=
 
         until [ $page -ge $totalpages ]; do
         
@@ -78,16 +80,20 @@ case $server in
          
           # file/dir-names for each page are embedded in variables inside Javascript <script>-tag
 
-          readarray var <<< "$(grep -E "(^var g_totalpage|^var g_folderslistStr|^var g_filelistStr)" <(dreq "http://$ip/setup_sdlist.htm") | cut -d'"' -f2)"
+          # Use FD 10 for read for not interfering with read from stdin inside {}
+          while read -r -u 10 line ; do
 
-          totalpages=${var[0]}
+            [[ "$line" =~ ^var\ g_totalpage ]] &&       { IFS='"' read -r f1 totalpages f3 <<< "$line"; continue;  }
+            [[ "$line" =~ ^var\ g_folderslistStr ]] &&  { IFS='"' read -r f1 folderslistStr f3 <<< "$line"; continue; }
+            [[ "$line" =~ ^var\ g_filelistStr ]] &&     { IFS='"' read -r f1 filelistStr f3  <<< "$line"; break; }
 
-          print_dir "${var[1]}"
-          print_dir "${var[2]}"
-              
+          done 10< <(dreq "http://$ip/setup_sdlist.htm")
+
+           print_dir "$folderslistStr"
+           print_dir "$filelistStr"
+
+           dirfiles+=$pagefiles 
         done
-
-        dirfiles+=$pagefiles
 
         [[ ! -z $dirfiles && ! $nodownload ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
@@ -102,3 +108,4 @@ case $server in
       #getSDFile-dcs-lig-httpd
       ;;
 esac
+
