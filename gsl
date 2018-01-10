@@ -62,7 +62,7 @@ function getSDFile-dcs-lig-httpd
 }
 
 #read -r viddir serial camname < <(sdir "$ip")
-server=$(getserver "$ip")
+server=$(dserver "$ip")
 guess_viddir=$(grep -m 1 Video <(ls -d "$HOME"/*/))
 viddir="$guess_viddir/camera-$ip"
 cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then mkdir -v  "$viddir"; cd "$viddir" || { echo "Failed to cd into $viddir, using $PWD"; viddir=$PWD; } fi }
@@ -70,7 +70,7 @@ cd "$viddir" || { echo "Failed to cd into $viddir"; if [ ! -d "$viddir" ]; then 
 # Max. command line size bash; getconf ARG_MAX
 #https://stackoverflow.com/questions/19354870/bash-command-line-and-input-limit
 
-curlopt="-u admin:$(getpassw "$ip") --anyauth -s --compressed -e http://$ip/"
+curlopt="-u admin:$(dpassw "$ip") --anyauth -s --compressed -e http://$ip/"
 
 # log-format DCS-2530: 2018/01/02 14:02:26 Event trigger - motion detection.
 

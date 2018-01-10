@@ -12,7 +12,7 @@ fi
 
 ping -c 1 "$ip" || exit $?
 
-server=$(getserver "$ip")
+server=$(dserver "$ip")
 
 case $server in
   Embedthis-Appweb*)

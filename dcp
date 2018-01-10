@@ -14,7 +14,7 @@ dir=$1
 
 [[ -z "$dir" ]] && set /
 
-server=$(getserver "$ip")
+server=$(dserver "$ip")
 
 function print_dir
 {
@@ -86,10 +86,7 @@ case $server in
    
    Embedthis-Appweb*)
       
-      #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
-      sdfpp=3
-
-      dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null
+      sdfpp=3 dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
       
       while (( "$#" )); do
         

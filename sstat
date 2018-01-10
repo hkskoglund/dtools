@@ -9,7 +9,7 @@ fi
 
 ping -c 1 "$ip" >/dev/null  || exit $?
 
-curlopt="-u admin:$(getpassw "$ip") --anyauth -s --compressed -e http://$ip/"
+curlopt="-u admin:$(dpassw "$ip") --anyauth -s --compressed -e http://$ip/"
 
 # shellcheck disable=2086
 curl $curlopt  "http://$ip/eng/admin/st_device.cgi"

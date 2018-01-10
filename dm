@@ -9,7 +9,7 @@ if [ -z "$ip" ]; then
   exit 1
 fi
 
-server=$(getserver "$ip")
+server=$(dserver "$ip")
 
 case $server in
    
