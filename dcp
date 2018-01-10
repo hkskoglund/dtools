@@ -6,7 +6,7 @@
 [[ -z "$ip" ]] && { echo -e "No ip address\nUsage: $(basename "$0") [-d] [-l] ip {dir ...}"; printf "\t-l long format\n\t-d only list directories and files\n"; exit 1; }
 
 [[ $@ =~ -l ]] && { longformatopt=${BASH_REMATCH[0]}; set -- ${@#$longformatopt}; }
-[[ $@ =~ -d ]] && { nodownload=${BASH_REMATCH[0]}; set -- ${@#$nodownload}; }
+[[ $@ =~ -d ]] && { listdir=${BASH_REMATCH[0]}; set -- ${@#$listdir}; }
 
 #longformatopt=$(grep -oE "\-l" <<< "$@")
 
@@ -37,13 +37,49 @@ function print_dir
     fi
 
     if [[ ! -z "$longformatopt" ]]; then
-      [[ $nodownload ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
+      [[ $listdir ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
     else
-      [[ $nodownload ]] && echo "${dprop[0]}"
+      [[ $listdir ]] && echo "${dprop[0]}"
     fi
 
   done
  
+}
+
+function parse_page()
+{
+  totalpages=1
+  currentpage=0
+
+  pagefiles=
+
+  until (( currentpage >= totalpages )); do
+  
+    ((currentpage++))
+  
+    if [[ $(dreq "http://$ip/cgi-bin/sdoperate.cgi?list=&path=$dir&page=$currentpage") == *"500 Internal Error"* ]]; then
+      # Trying to access non-existent directory gives "500 Internal Error" response
+  
+        echo "Failed to open '$dir': 500 Internal Error"
+        continue
+    fi
+  
+    # file/dir-names for each page are embedded in variables inside Javascript <script>-tag
+
+    # Use FD 10 for read for not interfering with read from stdin inside {}
+    while read -r -u 10 line ; do
+
+      [[ "$line" =~ ^var\ g_totalpage ]] &&       { IFS='"' read -r f1 totalpages f3 <<< "$line"; continue;  }
+      [[ "$line" =~ ^var\ g_folderslistStr ]] &&  { IFS='"' read -r f1 folderslistStr f3 <<< "$line"; continue; }
+      [[ "$line" =~ ^var\ g_filelistStr ]] &&     { IFS='"' read -r f1 filelistStr f3  <<< "$line"; break; }
+
+    done 10< <(dreq "http://$ip/setup_sdlist.htm")
+
+    print_dir "$folderslistStr"
+    print_dir "$filelistStr"
+
+    dirfiles+=$pagefiles 
+  done
 }
 
 case $server in
@@ -54,48 +90,20 @@ case $server in
       sdfpp=3
 
       dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null
-
-      dirfiles=
       
       while (( "$#" )); do
         
-        dir=$1
-
-        totalpages=1
-        currentpage=0
-
-        pagefiles=
         dirfiles=
 
-        until [ $currentpage -ge $totalpages ]; do
-        
-          ((currentpage++))
+        dir=$1
          
-          if [[ $(dreq "http://$ip/cgi-bin/sdoperate.cgi?list=&path=$dir&page=$currentpage") == *"500 Internal Error"* ]]; then
-             # Trying to access non-existent directory gives "500 Internal Error" response
-         
-              echo "Failed to open '$dir': 500 Internal Error"
-              continue
-          fi
-         
-          # file/dir-names for each page are embedded in variables inside Javascript <script>-tag
+        if [[ $(basename "$dir") == *"."* ]]; then
+          dirfiles="http://$ip/cgi-bin/sddownload.cgi?file=$dir" # single file with . extension
+        else
+          parse_page
+        fi
 
-          # Use FD 10 for read for not interfering with read from stdin inside {}
-          while read -r -u 10 line ; do
-
-            [[ "$line" =~ ^var\ g_totalpage ]] &&       { IFS='"' read -r f1 totalpages f3 <<< "$line"; continue;  }
-            [[ "$line" =~ ^var\ g_folderslistStr ]] &&  { IFS='"' read -r f1 folderslistStr f3 <<< "$line"; continue; }
-            [[ "$line" =~ ^var\ g_filelistStr ]] &&     { IFS='"' read -r f1 filelistStr f3  <<< "$line"; break; }
-
-          done 10< <(dreq "http://$ip/setup_sdlist.htm")
-
-           print_dir "$folderslistStr"
-           print_dir "$filelistStr"
-
-           dirfiles+=$pagefiles 
-        done
-
-        [[ ! -z $dirfiles && ! $nodownload ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
+        [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
         shift;
 
