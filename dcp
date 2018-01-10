@@ -3,7 +3,7 @@
 #ip=$(grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" <<< "$@" | head -1)
 [[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && { ip=${BASH_REMATCH[0]}; set -- ${@#$ip}; }
 
-[[ -z "$ip" ]] && { echo "Usage: $(basename "$0") [-d] [-l] ip {dir ...}"; printf "\t-l long format\n\t-d only list directories and files\n"; exit 1; }
+[[ -z "$ip" ]] && { echo -e "No ip address\nUsage: $(basename "$0") [-d] [-l] ip {dir ...}"; printf "\t-l long format\n\t-d only list directories and files\n"; exit 1; }
 
 [[ $@ =~ -l ]] && { longformatopt=${BASH_REMATCH[0]}; set -- ${@#$longformatopt}; }
 [[ $@ =~ -d ]] && { nodownload=${BASH_REMATCH[0]}; set -- ${@#$nodownload}; }
@@ -62,16 +62,16 @@ case $server in
         dir=$1
 
         totalpages=1
-        page=0
+        currentpage=0
 
         pagefiles=
         dirfiles=
 
-        until [ $page -ge $totalpages ]; do
+        until [ $currentpage -ge $totalpages ]; do
         
-          ((page++))
+          ((currentpage++))
          
-          if [[ $(dreq "http://$ip/cgi-bin/sdoperate.cgi?list=&path=$dir&page=$page") == *"500 Internal Error"* ]]; then
+          if [[ $(dreq "http://$ip/cgi-bin/sdoperate.cgi?list=&path=$dir&page=$currentpage") == *"500 Internal Error"* ]]; then
              # Trying to access non-existent directory gives "500 Internal Error" response
          
               echo "Failed to open '$dir': 500 Internal Error"
@@ -104,7 +104,13 @@ case $server in
     ;;
     
     dcs-lig-httpd*)
+
+    #dreq "http://$ip/eng/admin/adv_sdcard.cgi"  --data 'command=video&filesperpage=100&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=&files_per_page=100&page_count=1'
     
+      #curl 'http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=&command=video&filesperpage=100' ' --compressed
+      #format : <folderstring>18:d:-1*17:d:-1*15:d:-1*14:d:-1*13:d:-1*12:d:-1*</folderstring>
+      #format: <folderstring>20180105_185040.jpg:f:123*</folderstring>
+      #curl 'http://192.168.0.110/eng/admin/adv_sdcard.cgi'  --data 'command=video&filesperpage=100&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=&files_per_page=100&page_count=1' --compressed
       #getSDFile-dcs-lig-httpd
       ;;
 esac
