@@ -1,0 +1,3 @@
+#/bin/bash
+#get admin password for dlink web server 
+grep "$1" ~/.config/dlink-admin.conf | cut -d' ' -f3
