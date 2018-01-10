@@ -16,6 +16,15 @@ dir=$1
 
 server=$(dserver "$ip")
 
+function print_properties
+{
+  if [[ ! -z "$longformatopt" ]]; then
+      [[ $listdir ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
+    else
+      [[ $listdir ]] && echo "${dprop[0]}"
+  fi
+}
+
 function print_dir
 {
   #format: var g_folderslistStr = GV("Picture;1;0;null;0;0;0;1514898228;0,Video;1;0;null;5;0;0;1515193747;0","")
@@ -24,29 +33,32 @@ function print_dir
   readarray -d ',' list <<< "$1"
 
   for item in ${list[*]}; do
+
     IFS=";" read -r -d, -a dprop <<< "$item" 
     
     timestamp=$(date --date @"${dprop[7]}" +'%b %e %T')
 
     if [[ "${dprop[1]}" == "1" ]]; then
         attr="drwxrwxr--"
-      else
-        attr="-r--r--r--"
-        pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
-        #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
-    fi
-
-    if [[ ! -z "$longformatopt" ]]; then
-      [[ $listdir ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
     else
-      [[ $listdir ]] && echo "${dprop[0]}"
+        attr="-r--r--r--"
+        if [[ "$singlefile" == "1" && ${dprop[0]} == *$basename* ]]; then
+          pagefiles="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]}"
+          print_properties
+          break
+        elif [[ -z "$singlefile" ]]; then
+          pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
+        #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
+        fi
     fi
 
+   [[ -z "$singlefile" ]] && print_properties
+   
   done
- 
+
 }
 
-function parse_page()
+function parse_page
 {
   totalpages=1
   currentpage=0
@@ -93,13 +105,20 @@ case $server in
         dirfiles=
 
         dir=$1
-         
-        if [[ $(basename "$dir") == *"."* ]]; then
-          dirfiles="http://$ip/cgi-bin/sddownload.cgi?file=$dir" # single file with . extension
-        else
-          parse_page
-        fi
 
+        basename=$(basename "$dir")
+
+        singlefile=
+         
+        if [[ $basename  == *"."* ]]; then
+         singlefile=1
+         dir=$(dirname "$dir")
+        fi
+         
+        parse_page
+
+        [[ -z "$dirfiles" && "$singlefile" == "1" ]] && echo No such file "$dir/$basename"
+ 
         [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
         shift;
