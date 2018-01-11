@@ -10,11 +10,9 @@
 
 #longformatopt=$(grep -oE "\-l" <<< "$@")
 
-dir=$1
-
-[[ -z "$dir" ]] && set /
-
 server=$(dserver "$ip")
+
+dir=$1
 
 function print_properties
 {
@@ -96,9 +94,84 @@ function parse_page
   done
 }
 
+function print_properties_dcs-lig-httpd
+{
+  if [[ ! -z "$longformatopt" ]]; then
+     
+      [[ $listdir ]] && printf "%s %s admin admin %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[2] * 1000 ))" --padding=7)" "${dprop[0]}"
+    else
+      [[ $listdir ]] && echo "${dprop[0]}"
+  fi
+
+}
+
+function print_dir_dcs-lig-httpd
+{
+
+  pattern=$basename
+  pattern=${pattern//\*/.\*}  #substitute * with .* for regex matching
+
+ readarray -d '*' list <<< "$1"
+
+  for item in ${list[*]}; do
+     IFS=":" read -r -a dprop <<< "$item" 
+
+  dprop[2]=${dprop[2]%\*} #strip off * suffix from file size
+
+   if [[ "${dprop[1]}" == "d" ]]; then
+        attr="drwxrwxr--"
+        dprop[2]=0 # is -1
+        print_properties_dcs-lig-httpd
+    else
+        attr="-r--r--r--"
+        if [[ "$matchfile" == "1" && ${dprop[0]} =~ $pattern ]]; then
+        #Fromat: http://192.168.0.110/cgi/admin/getSDFile.cgi?file=20180110_063000.mp4&path=DCS-936L/20180110/06/20180110_063000.mp4
+          pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
+          print_properties_dcs-lig-httpd
+        elif [[ -z "$matchfile" ]]; then
+          pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
+          print_properties_dcs-lig-httpd
+        fi
+    fi
+    
+  done
+}
+
+function parse_page_dcs-lig-httpd
+{
+  totalpages=1
+  currentpage=0
+
+  pagefiles=
+
+  until (( currentpage >= totalpages )); do
+  
+    ((currentpage++))
+  
+    while read -r line ; do
+
+      #[[ "$line" =~ ^var\ g_totalpage ]] &&       { IFS='"' read -r f1 totalpages f3 <<< "$line"; continue;  }
+      #[[ "$line" =~ ^var\ g_folderslistStr ]] &&  { IFS='"' read -r f1 folderslistStr f3 <<< "$line"; continue; }
+      #[[ "$line" =~ ^var\ g_filelistStr ]] &&     { IFS='"' read -r f1 filelistStr f3  <<< "$line"; break; }
+
+      [[ "$line" =~ ^\<product\> ]] && { prefix=${line#<product>}; product=${prefix%</product>}; }
+      [[ "$line" =~ ^\<totalpages\> ]] && { prefix=${line#<totalpages>}; totalpages=${prefix%</totalpages>}; }
+      [[ "$line" =~ ^\<folderstring\> ]] && { prefix=${line#<folderstring>}; folderstring=${prefix%</folderstring>}; }
+
+
+    done < <(dreq "http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=$dir&command=video&filesperpage=100")
+
+    print_dir_dcs-lig-httpd "$folderstring"
+
+    dirfiles+=$pagefiles 
+  done
+}
+
 case $server in
    
    Embedthis-Appweb*)
+
+    [[ -z "$dir" ]] && set /
       
       sdfpp=3 dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
       
@@ -121,7 +194,7 @@ case $server in
 
         [[ -z "$dirfiles" && "$matchfile" == "1" ]] && echo No such file "$dir/$basename"
  
-        #[[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
+        [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
         shift;
 
@@ -131,10 +204,37 @@ case $server in
     
     dcs-lig-httpd*)
 
-    #dreq "http://$ip/eng/admin/adv_sdcard.cgi"  --data 'command=video&filesperpage=100&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=&files_per_page=100&page_count=1'
+    #fpp=100 dreq "http://$ip/eng/admin/adv_sdcard.cgi"  --data "command=video&filesperpage=$fpp&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=&files_per_page=$fpp&page_count=1"
     
+    [[ -z "$dir" ]] && set ''
+
+    while (( "$#" )); do
+        
+        dirfiles=
+
+        dir=$1
+
+        basename=$(basename "$dir")
+
+        matchfile=
+         
+        if [[ $basename  == *"."* ]]; then
+         matchfile=1
+         dir=$(dirname "$dir")
+        fi
+        
+        parse_page_dcs-lig-httpd
+
+        #[[ -z "$dirfiles" && "$matchfile" == "1" ]] && echo No such file "$dir/$basename"
+ 
+        [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
+
+        shift;
+
+    done
       #curl 'http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=&command=video&filesperpage=100' ' --compressed
       #format : <folderstring>18:d:-1*17:d:-1*15:d:-1*14:d:-1*13:d:-1*12:d:-1*</folderstring>
+      #format: <folderstring>20180110:d:-1*20180109:d:-1*20180105:d:-1*20180103:d:-1*20180102:d:-1*</folderstring>
       #format: <folderstring>20180105_185040.jpg:f:123*</folderstring>
       #curl 'http://192.168.0.110/eng/admin/adv_sdcard.cgi'  --data 'command=video&filesperpage=100&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=&files_per_page=100&page_count=1' --compressed
       #getSDFile-dcs-lig-httpd

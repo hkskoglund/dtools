@@ -1,5 +1,5 @@
 [Unit]
-Description=Get sleep video from DCS-936L camera each hour
+Description=Get video from camera each hour
 
 [Timer]
 
