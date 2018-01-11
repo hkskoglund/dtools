@@ -1,7 +1,7 @@
 #!/bin/bash
 [[ "$*" =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && { ip=${BASH_REMATCH[0]}; set -- "${@#$ip}"; }
 
-#dateformat: 2018-01-09 22:50:00
+#dateformat: "2018-01-09 22:50:00"
 start=$(($(date -d"$2" +%s) * 1000));
 stop=$(($(date -d"$3" +%s) * 1000))
 
@@ -10,14 +10,14 @@ threshold=$4
 
 sum=0;
 
-while read -r startms stopms startdate starttime stoptime sec; do 
-    if (( startms >= start && startms <= stop )); then 
-       ((sum+=sec));
-       [[ $sec -ge $threshold ]] && echo "$startms,$sec $starttime $sum"; 
+while read -r startms stopms startdate starttime stoptime sec cumsec; do 
+    if (( $startms >= $start && $startms <= $stop )); then 
+      (( sum+=$sec ));
+      (( $sec > $threshold )) && echo "$startms,$sec $starttime $sum"; 
     fi; 
-done < <(dmotion "$ip")
+done < <(dm "$ip")
 
 hours=$((sum / 60))
 minutes=$(( sum - hours * 60 ))
 
-printf "%d %02d:%02d" $sum $hours $minutes 
+printf "%d %02d:%02d\n" $sum $hours $minutes 

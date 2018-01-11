@@ -29,6 +29,9 @@ function print_dir
 {
   #format: var g_folderslistStr = GV("Picture;1;0;null;0;0;0;1514898228;0,Video;1;0;null;5;0;0;1515193747;0","")
   #format: var g_filelistStr = decodeURIComponent(GV("p1_20180104_090009.jpg;0;0;56;0;0;0;1515052811;0,
+
+  pattern=$basename
+  pattern=${pattern//\*/.\*}  #substitute * with .* for regex matching
      
   readarray -d ',' list <<< "$1"
 
@@ -40,20 +43,19 @@ function print_dir
 
     if [[ "${dprop[1]}" == "1" ]]; then
         attr="drwxrwxr--"
+        print_properties
     else
         attr="-r--r--r--"
-        if [[ "$singlefile" == "1" && ${dprop[0]} == *$basename* ]]; then
-          pagefiles="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]}"
-          print_properties
-          break
-        elif [[ -z "$singlefile" ]]; then
+        if [[ "$matchfile" == "1" && ${dprop[0]} =~ $pattern ]]; then
           pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
+          print_properties
+        elif [[ -z "$matchfile" ]]; then
+          pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
+          print_properties
         #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
         fi
     fi
 
-   [[ -z "$singlefile" ]] && print_properties
-   
   done
 
 }
@@ -108,18 +110,18 @@ case $server in
 
         basename=$(basename "$dir")
 
-        singlefile=
+        matchfile=
          
         if [[ $basename  == *"."* ]]; then
-         singlefile=1
+         matchfile=1
          dir=$(dirname "$dir")
         fi
          
         parse_page
 
-        [[ -z "$dirfiles" && "$singlefile" == "1" ]] && echo No such file "$dir/$basename"
+        [[ -z "$dirfiles" && "$matchfile" == "1" ]] && echo No such file "$dir/$basename"
  
-        [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
+        #[[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
         shift;
 
