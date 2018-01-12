@@ -20,4 +20,4 @@ shift "$((OPTIND-1))"
 # Use Server-field in http response?
 # Server: dcs-lig-httpd               DCS-936L
 # Server: Embedthis-Appweb/3.3.1      DCS-2530L
-curl --head $1  2>&1 | grep Server | cut -d' ' -f2
+curl --head "$ip"  2>&1 | grep Server | cut -d' ' -f2

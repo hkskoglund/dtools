@@ -22,7 +22,7 @@ done
 
 shift "$((OPTIND-1))"
 
-server=$(dserver "$ip")
+server=$(dserver -i "$ip")
 
 dir=$1
 
@@ -241,6 +241,11 @@ case $server in
 
     done
    
+    ;;
+
+    *)
+
+    echo -e "Server $server not supported"
     ;;
 esac
 
