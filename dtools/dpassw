@@ -16,4 +16,4 @@ done
 
 shift "$((OPTIND-1))"
 
-grep "$ip" ~/.config/dlink-admin.conf | cut -d' ' -f3
+grep "$ip" ~/.config/dtools/admin.conf | cut -d' ' -f3
