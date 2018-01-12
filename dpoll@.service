@@ -2,7 +2,7 @@
 Description=Get videos from camera on %I
 
 [Service]
-ExecStart=/home/henning/.local/bin/dpoll %I
+ExecStart=~/.local/bin/dpoll -i %I
 #[Install]
 #WantedBy=multi-user.target
 #Also=gsl.timer

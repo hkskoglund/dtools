@@ -1,3 +1,19 @@
-#/bin/bash
-#get admin password for dlink web server 
-grep "$1" ~/.config/dlink-admin.conf | cut -d' ' -f3
+#!/bin/bash
+#get admin password for dlink web server
+function usage 
+{
+  echo "Usage: $(basename "$0") -i ip"
+  exit 1 
+}
+
+while getopts i: opt; do
+    case $opt in
+        i) ip=$OPTARG ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
+
+grep "$ip" ~/.config/dlink-admin.conf | cut -d' ' -f3

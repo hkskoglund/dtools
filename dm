@@ -2,12 +2,21 @@
 #calculates time difference between trigger and recover events for entire camera syslog
 #tested on: DCS-2530L
 
-[[ $@ =~ ([0-9]{1,3}\.){3}[0-9]{1,3} ]] && ip=${BASH_REMATCH[0]}
+function usage 
+{
+  echo "Usage: $(basename "$0") -i ip"
+  exit 1 
+}
 
-if [ -z "$ip" ]; then
-  echo "Usage: $(basename "$0") ip"
-  exit 1
-fi
+while getopts i: opt; do
+    case $opt in
+        i) ip=$OPTARG ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
 
 server=$(dserver "$ip")
 
@@ -26,7 +35,7 @@ case $server in
             sec1970_2=$(date -d "$date2 $time2" '+%s')
             
             echo "$(( "$sec1970_1" * 1000)) $(( "$sec1970_2" * 1000)) $date1 $time1 $time2 $(printf "%2d %4d" $(( "$sec1970_2" - "$sec1970_1"  )) "$nomotion_sec" )"
-        done < <(dlog -m "$ip")
+        done < <(dlog -m -i "$ip")
         ;;
     *)
 

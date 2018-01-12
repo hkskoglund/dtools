@@ -1,10 +1,21 @@
 #!/bin/bash
 #get dlink web server from Server http response header
 
-if [ -z "$1" ]; then
-  echo "Usage: dserver ip"
-  exit 1
-fi
+function usage 
+{
+  echo "Usage: $(basename "$0") -i ip"
+  exit 1 
+}
+
+while getopts i: opt; do
+    case $opt in
+        i) ip=$OPTARG ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
 
 # Use Server-field in http response?
 # Server: dcs-lig-httpd               DCS-936L
