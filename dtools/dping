@@ -1,0 +1,25 @@
+#!/bin/bash
+#ping camera as specific intervals
+
+function usage 
+{
+  echo "Usage: $(basename "$0") ip [interval]"
+  exit 1 
+}
+
+while getopts i: opt; do
+    case $opt in
+        i) ip=$OPTARG ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
+
+interval=$1
+if [ -z "$interval" ]; then
+  interval=30
+fi;
+
+ping -i $interval -D "$ip" | while read -r pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" ; fi; done
