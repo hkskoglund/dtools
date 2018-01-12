@@ -35,7 +35,7 @@ case $server in
 
   *)
 
-     echo -e "$(basename $0): Server $server not supported"
+     echo -e "$(basename "$0"): Server $server not supported"
      exit 1
      ;;   
 esac

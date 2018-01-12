@@ -95,7 +95,7 @@ function parse_page
 
         [[ "$line" =~ ^var\ g_totalpage ]] &&       { IFS='"' read -r f1 totalpages f3 <<< "$line"; continue;  }
         [[ "$line" =~ ^var\ g_folderslistStr ]] &&  { IFS='"' read -r f1 folderslistStr f3 <<< "$line"; continue; }
-        [[ "$line" =~ ^var\ g_filelistStr ]] &&     { IFS='"' read -r f1 filelistStr f3  <<< "$line"; break; }
+        [[ "$line" =~ ^var\ g_filelistStr ]] &&     { IFS='"' read -r f1 filelistStr f3 <<< "$line"; break; }
 
       done 10< <(dreq "http://$ip/setup_sdlist.htm")
 
@@ -110,6 +110,7 @@ function parse_page
   {
     totalpages=1
     currentpage=0
+    sdfpp=100
 
     pagefiles=
 
@@ -123,8 +124,7 @@ function parse_page
       [[ "$line" =~ ^\<totalpages\> ]] && { prefix=${line#<totalpages>}; totalpages=${prefix%</totalpages>}; }
       [[ "$line" =~ ^\<folderstring\> ]] && { prefix=${line#<folderstring>}; folderstring=${prefix%</folderstring>}; }
 
-
-    done < <(dreq "http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=$dir&command=video&filesperpage=100")
+    done < <(dreq "http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=$dir&command=video&filesperpage=$sdfpp&currentpage=$currentpage")
 
     print_dir_dcs-lig-httpd "$folderstring"
 
@@ -181,7 +181,8 @@ case $server in
 
     [[ -z "$dir" ]] && set /
       
-      sdfpp=3 dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
+      sdfpp=3 
+      dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
       
       while (( "$#" )); do
         
@@ -212,8 +213,6 @@ case $server in
     
     dcs-lig-httpd*)
 
-    #fpp=100 dreq "http://$ip/eng/admin/adv_sdcard.cgi"  --data "command=video&filesperpage=$fpp&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=&files_per_page=$fpp&page_count=1"
-    
     [[ -z "$dir" ]] && set ''
 
     while (( "$#" )); do

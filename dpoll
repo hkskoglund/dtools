@@ -23,7 +23,7 @@ case $server in
    
    Embedthis-Appweb*)
 
-      dcp -i "$ip" /video/$y$m$d/$H
+      dcp -i "$ip" "/video/$y$m$d/$H"
    ;;
 
    *)
