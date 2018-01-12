@@ -17,14 +17,20 @@ done
 shift "$((OPTIND-1))"
 
 server=$(dserver -i "$ip")
-read -r y m d H M < <(date -d'1 hours ago' +'%Y %m %d %H %M')
+read -r Y m d H M < <(date -d'1 hours ago' +'%Y %m %d %H %M')
 
 case $server in
    
    Embedthis-Appweb*)
 
-      dcp -i "$ip" "/video/$y$m$d/$H"
+      dcp -i "$ip" "/video/$Y$m$d/$H"
    ;;
+
+   dcs-lig-httpd*)
+
+      dcp -i "$ip" "$Y$m$d/$H"
+
+      ;;
 
    *)
 
