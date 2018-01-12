@@ -29,7 +29,7 @@ dir=$1
 function print_properties
 {
   if [[ ! -z "$longformatopt" ]]; then
-      [[ $listdir ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[3] * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
+      [[ $listdir ]] && printf "%s %s admin admin %s %s\n" "$attr" "$(numfmt --to=iec "$(( $1 * 1000 ))" --padding=7)" "$timestamp" "${dprop[0]}"
     else
       [[ $listdir ]] && echo "${dprop[0]}"
   fi
@@ -53,15 +53,15 @@ function print_dir
 
     if [[ "${dprop[1]}" == "1" ]]; then
         attr="drwxrwxr--"
-        print_properties
+        print_properties dprop[3]
     else
         attr="-r--r--r--"
         if [[ "$matchfile" == "1" && ${dprop[0]} =~ $pattern ]]; then
           pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
-          print_properties
+          print_properties dprop[3]
         elif [[ -z "$matchfile" ]]; then
           pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
-          print_properties
+          print_properties dprop[3]
         #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
         fi
     fi
@@ -132,17 +132,6 @@ function parse_page
   done
 }
 
-function print_properties_dcs-lig-httpd
-{
-  if [[ ! -z "$longformatopt" ]]; then
-     
-      [[ $listdir ]] && printf "%s %s admin admin %s\n" "$attr" "$(numfmt --to=iec "$(( dprop[2] * 1000 ))" --padding=7)" "${dprop[0]}"
-    else
-      [[ $listdir ]] && echo "${dprop[0]}"
-  fi
-
-}
-
 function print_dir_dcs-lig-httpd
 {
 
@@ -150,6 +139,8 @@ function print_dir_dcs-lig-httpd
   pattern=${pattern//\*/.\*}  #substitute * with .* for regex matching
 
  readarray -d '*' list <<< "$1"
+
+ timestamp=$(date +'%b %e %T') # No date available, use current time
 
   for item in ${list[*]}; do
      IFS=":" read -r -a dprop <<< "$item" 
@@ -159,16 +150,16 @@ function print_dir_dcs-lig-httpd
    if [[ "${dprop[1]}" == "d" ]]; then
         attr="drwxrwxr--"
         dprop[2]=0 # is -1
-        print_properties_dcs-lig-httpd
+        print_properties dprop[2]
     else
         attr="-r--r--r--"
         if [[ "$matchfile" == "1" && ${dprop[0]} =~ $pattern ]]; then
         #Fromat: http://192.168.0.110/cgi/admin/getSDFile.cgi?file=20180110_063000.mp4&path=DCS-936L/20180110/06/20180110_063000.mp4
           pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
-          print_properties_dcs-lig-httpd
+          print_properties dprop[2]
         elif [[ -z "$matchfile" ]]; then
           pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
-          print_properties_dcs-lig-httpd
+          print_properties dprop[2]
         fi
     fi
     
