@@ -40,8 +40,7 @@ function print_dir
   #format: var g_folderslistStr = GV("Picture;1;0;null;0;0;0;1514898228;0,Video;1;0;null;5;0;0;1515193747;0","")
   #format: var g_filelistStr = decodeURIComponent(GV("p1_20180104_090009.jpg;0;0;56;0;0;0;1515052811;0,
 
-  pattern=$basename
-  pattern=${pattern//\*/.\*}  #substitute * with .* for regex matching
+  pattern=${basename//\*/.\*}  #substitute * with .* for regex matching
      
   readarray -d ',' list <<< "$1"
 
@@ -126,7 +125,8 @@ function parse_page
 
     done < <(dreq "http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=$dir&command=video&filesperpage=$sdfpp&currentpage=$currentpage")
 
-    print_dir_dcs-lig-httpd "$folderstring"
+    # Attempt to access non-existent directory gives 400 Bad request response
+    [[ ! -z "$folderstring" ]] && print_dir_dcs-lig-httpd "$folderstring"
 
     dirfiles+=$pagefiles 
   done
@@ -135,8 +135,7 @@ function parse_page
 function print_dir_dcs-lig-httpd
 {
 
-  pattern=$basename
-  pattern=${pattern//\*/.\*}  #substitute * with .* for regex matching
+ pattern=${basename//\*/.\*}  #substitute * with .* for regex matching
 
  readarray -d '*' list <<< "$1"
 
@@ -192,7 +191,7 @@ case $server in
          
         parse_page
 
-        [[ -z "$dirfiles" && "$matchfile" == "1" ]] && echo No such file "$dir/$basename"
+        [[ -z "$dirfiles" && $matchfile == "1" ]] && echo "No such file $(dirname "$dir")/$basename"
  
         [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
@@ -220,10 +219,12 @@ case $server in
          matchfile=1
          dir=$(dirname "$dir")
         fi
-        
+
+        dir=${dir#/}; # Allow /-root as prefix on cmd line (not supported by server)
+
         parse_page_dcs-lig-httpd
 
-        [[ -z "$dirfiles" && "$matchfile" == "1" ]] && echo No such file "$dir/$basename"
+        [[ -z "$dirfiles" && $matchfile == "1" ]] && echo "No such file $(dirname "$dir")/$basename"
  
         [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 

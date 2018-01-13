@@ -18,7 +18,7 @@ done
 
 shift "$((OPTIND-1))"
 
-server=$(dserver "$ip")
+server=$(dserver -i "$ip")
 
 case $server in
    

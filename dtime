@@ -17,10 +17,10 @@ done
 shift "$((OPTIND-1))"
 
 #dateformat: "2018-01-09 22:50:00"
-start=$(($(date -d"$2" +%s) * 1000));
-stop=$(($(date -d"$3" +%s) * 1000))
+start=$(($(date -d"$1" +%s) * 1000));
+stop=$(($(date -d"$2" +%s) * 1000))
 
-threshold=$4
+threshold=$3
 [[ -z $threshold ]] && threshold=10
 
 sum=0;
