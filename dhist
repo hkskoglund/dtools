@@ -36,6 +36,5 @@ moving=
 moving=${moving%$'\n'} # remove \n at end
 
 if [[  -z $movingsec ]]; then
-  echo Moving "$moving"
   sort -n <<< $moving | uniq -c 
 fi
