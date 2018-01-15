@@ -33,6 +33,9 @@ moving=
     fi 
  done < <(dtime -i "$ip" "$1" "$2" 0) 
 
+moving=${moving%$'\n'} # remove \n at end
+
 if [[  -z $movingsec ]]; then
+  echo Moving "$moving"
   sort -n <<< $moving | uniq -c 
 fi
