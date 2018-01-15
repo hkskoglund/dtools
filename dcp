@@ -24,8 +24,6 @@ shift "$((OPTIND-1))"
 
 server=$(dserver -i "$ip")
 
-dir=$1
-
 function print_properties
 {
   if [[ ! -z "$longformatopt" ]]; then
@@ -35,13 +33,22 @@ function print_properties
   fi
 }
 
+function set_regex_pattern
+{
+  [[ -z $basename ]] && return
+
+  pattern=${basename/\./\\.}  #substitute  . with \.
+  pattern=${pattern//\*/.\*}  #            * with .* 
+  pattern=${pattern//\?/.}    #            ? with .
+}
+
 function print_dir
 {
   #format: var g_folderslistStr = GV("Picture;1;0;null;0;0;0;1514898228;0,Video;1;0;null;5;0;0;1515193747;0","")
   #format: var g_filelistStr = decodeURIComponent(GV("p1_20180104_090009.jpg;0;0;56;0;0;0;1515052811;0,
+  
+  set_regex_pattern
 
-  pattern=${basename//\*/.\*}  #substitute * with .* for regex matching
-     
   readarray -d ',' list <<< "$1"
 
   for item in ${list[*]}; do
@@ -55,10 +62,7 @@ function print_dir
         print_properties dprop[3]
     else
         attr="-r--r--r--"
-        if [[ "$matchfile" == "1" && ${dprop[0]} =~ $pattern ]]; then
-          pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
-          print_properties dprop[3]
-        elif [[ -z "$matchfile" ]]; then
+        if [[ ${dprop[0]} =~ $pattern ]]; then
           pagefiles+="http://$ip/cgi-bin/sddownload.cgi?file=$dir/${dprop[0]} "
           print_properties dprop[3]
         #Format: http://192.168.0.106/cgi-bin/sddownload.cgi?file=/video/20180103/00/p120180103_003150.mp4
@@ -67,6 +71,36 @@ function print_dir
 
   done
 
+}
+
+function print_dir_dcs-lig-httpd
+{
+
+  set_regex_pattern
+
+  readarray -d '*' list <<< "$1"
+
+  timestamp=$(date +'%b %e %T') # No date available, use current time
+
+    for item in ${list[*]}; do
+      IFS=":" read -r -a dprop <<< "$item" 
+
+    dprop[2]=${dprop[2]%\*} #strip off * suffix from file size
+
+    if [[ "${dprop[1]}" == "d" ]]; then
+          attr="drwxrwxr--"
+          dprop[2]=0 # is -1
+          print_properties dprop[2]
+      else
+          attr="-r--r--r--"
+          if [[  ${dprop[0]} =~ $pattern ]]; then
+          #Fromat: http://192.168.0.110/cgi/admin/getSDFile.cgi?file=20180110_063000.mp4&path=DCS-936L/20180110/06/20180110_063000.mp4
+            pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
+            print_properties dprop[2]
+          fi
+      fi
+      
+    done
 }
 
 function parse_page
@@ -123,7 +157,7 @@ function parse_page
       [[ "$line" =~ ^\<totalpages\> ]] && { prefix=${line#<totalpages>}; totalpages=${prefix%</totalpages>}; }
       [[ "$line" =~ ^\<folderstring\> ]] && { prefix=${line#<folderstring>}; folderstring=${prefix%</folderstring>}; }
 
-    done < <(dreq "http://192.168.0.110/eng/admin/adv_sdcard.cgi?folderpath=$dir&command=video&filesperpage=$sdfpp&currentpage=$currentpage")
+    done < <(dreq "http://$ip/eng/admin/adv_sdcard.cgi?folderpath=$dir&command=video&filesperpage=$sdfpp&currentpage=$currentpage")
 
     # Attempt to access non-existent directory gives 400 Bad request response
     [[ ! -z "$folderstring" ]] && print_dir_dcs-lig-httpd "$folderstring"
@@ -132,38 +166,7 @@ function parse_page
   done
 }
 
-function print_dir_dcs-lig-httpd
-{
-
- pattern=${basename//\*/.\*}  #substitute * with .* for regex matching
-
- readarray -d '*' list <<< "$1"
-
- timestamp=$(date +'%b %e %T') # No date available, use current time
-
-  for item in ${list[*]}; do
-     IFS=":" read -r -a dprop <<< "$item" 
-
-  dprop[2]=${dprop[2]%\*} #strip off * suffix from file size
-
-   if [[ "${dprop[1]}" == "d" ]]; then
-        attr="drwxrwxr--"
-        dprop[2]=0 # is -1
-        print_properties dprop[2]
-    else
-        attr="-r--r--r--"
-        if [[ "$matchfile" == "1" && ${dprop[0]} =~ $pattern ]]; then
-        #Fromat: http://192.168.0.110/cgi/admin/getSDFile.cgi?file=20180110_063000.mp4&path=DCS-936L/20180110/06/20180110_063000.mp4
-          pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
-          print_properties dprop[2]
-        elif [[ -z "$matchfile" ]]; then
-          pagefiles+="http://$ip/cgi/admin/getSDFile.cgi?file=${dprop[0]}&path=$product/$dir/${dprop[0]} "
-          print_properties dprop[2]
-        fi
-    fi
-    
-  done
-}
+dir=$1
 
 case $server in
    
@@ -171,28 +174,24 @@ case $server in
 
     [[ -z "$dir" ]] && set /
       
-      sdfpp=3 
-      dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp&del=" >/dev/null #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
+      sdfpp=3 #set 100 files pr page (100:sdfpp=3,50:sdfpp=2,20:sdfpp=1,10:sdfpp=0)
+
+      dreq "http://$ip/cgi-bin/sdoperate.cgi?sdfpp=$sdfpp" >/dev/null 
       
       while (( "$#" )); do
-        
-        dirfiles=
 
         dir=$1
 
-        basename=$(basename "$dir")
+        dirfiles=
 
-        matchfile=
-         
-        if [[ $basename  == *"."* ]]; then
-         matchfile=1
-         dir=$(dirname "$dir")
-        fi
-         
+        [[ ! ${dir:0:1} == '/' ]] && dir=/$dir
+        
+        IFS='/' read -r d1 d2 d3 d4 basename <<< "$dir" 
+
+        [[ ! -z $d2 ]] && dir=/$d2; [[ ! -z $d3 ]] && dir+=/$d3; [[ ! -z $d4 ]] && dir+=/$d4
+        
         parse_page
 
-        [[ -z "$dirfiles" && $matchfile == "1" ]] && echo "No such file $(dirname "$dir")/$basename"
- 
         [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
         shift;
@@ -206,26 +205,19 @@ case $server in
     [[ -z "$dir" ]] && set ''
 
     while (( "$#" )); do
+
+       dir=$1
         
-        dirfiles=
+       dirfiles=
 
-        dir=$1
+       [[ ! ${dir:0:1} == '/'  ]] && dir=/$dir
 
-        basename=$(basename "$dir")
+       IFS='/' read -r d1 d2 d3 basename <<< "$dir"
 
-        matchfile=
-         
-        if [[ $basename  == *"."* ]]; then
-         matchfile=1
-         dir=$(dirname "$dir")
-        fi
-
-        dir=${dir#/}; # Allow /-root as prefix on cmd line (not supported by server)
+        [[ ! -z $d2 ]] && dir=$d2;  [[ ! -z $d3 ]] && dir+=/$d3; [[ ! -z $d4 ]] && dir+=/$d4
 
         parse_page_dcs-lig-httpd
 
-        [[ -z "$dirfiles" && $matchfile == "1" ]] && echo "No such file $(dirname "$dir")/$basename"
- 
         [[ ! -z $dirfiles && ! $listdir ]] && dreq -v --remote-header-name --remote-name-all $dirfiles
 
         shift;

@@ -1,0 +1,30 @@
+#!/bin/bash
+#to do...
+function usage 
+{
+  #echo -e "No ip address\nUsage: $(basename "$0") [-d] [-l] -i ip [dir ... ]"
+  #printf "\t-l long format\n\t-d only list directories and files\n" 
+  #exit 1
+}
+
+while getopts ldi: opt; do
+    case $opt in
+        l) longformatopt=1
+            ;;
+        d) listdir=1
+            ;;
+        i) ip=$OPTARG
+            ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
+
+server=$(dserver -i "$ip")
+
+
+#curl 'http://192.168.0.110/eng/admin/adv_sdcard.cgi' -H 'Cookie: usePath=null' -H 'Origin: http://192.168.0.110' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.9,nb-NO;q=0.8,nb;q=0.7,da-DK;q=0.6,da;q=0.5,sv-SE;q=0.4,sv;q=0.3' -H 'Upgrade-Insecure-Requests: 1' -H 'Authorization: Digest username="admin", realm="DCS-936L_FE", nonce="e861f86ccd518c9aa07834935f192162", uri="/eng/admin/adv_sdcard.cgi", response="0a57e7ce41578980ead8d5fa6ac2c01c", qop=auth, nc=0000004e, cnonce="4da3aac17deba8d3"' -H 'Content-Type: application/x-www-form-urlencoded' -H 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36' -H 'Cache-Control: max-age=0' -H 'Referer: http://192.168.0.110/eng/admin/adv_sdcard.cgi' -H 'Connection: keep-alive' -H 'DNT: 1' --data 'command=delete&filesperpage=100&totalpage=&currentpage=1&folderpath=&hostname=&resultCode=&FolderName=20171012*20171013*&files_per_page=100&page_count=1' --compressed
+#curl 'http://192.168.0.106/cgi-bin/sdoperate.cgi?sdfpp=3&del=/video/20180102' -H 'Authorization: Basic YWRtaW46Z2V0Zml0LjkxMFhU' -H 'DNT: 1' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.9,nb-NO;q=0.8,nb;q=0.7,da-DK;q=0.6,da;q=0.5,sv-SE;q=0.4,sv;q=0.3' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36' -H 'Accept: */*' -H 'Cache-Control: max-age=0' -H 'Referer: http://192.168.0.106/setup.htm' -H 'Cookie: ActiveX=0; MP_MODE=1; chromeVerAlert=false' -H 'Connection: keep-alive' -H 'If-Modified-Since: 0' --compressed
+#curl 'http://192.168.0.106/cgi-bin/sdoperate.cgi?sdfpp=3&del=/video/20180103,/video/20180104' -H 'Authorization: Basic YWRtaW46Z2V0Zml0LjkxMFhU' -H 'DNT: 1' -H 'Accept-Encoding: gzip, deflate' -H 'Accept-Language: en-US,en;q=0.9,nb-NO;q=0.8,nb;q=0.7,da-DK;q=0.6,da;q=0.5,sv-SE;q=0.4,sv;q=0.3' -H 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36' -H 'Accept: */*' -H 'Cache-Control: max-age=0' -H 'Referer: http://192.168.0.106/setup.htm' -H 'Cookie: ActiveX=0; MP_MODE=1; chromeVerAlert=false' -H 'Connection: keep-alive' -H 'If-Modified-Since: 0' --compressed

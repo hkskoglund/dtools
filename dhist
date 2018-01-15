@@ -1,0 +1,38 @@
+#!/bin/bash
+# Simple histogram of moving time in seconds between start and end time
+function usage 
+{
+  echo "Usage: $(basename "$0") -i ip"
+  echo "    -m only show moving sec"
+  exit 1 
+}
+
+while getopts mi: opt; do
+    case $opt in
+        i) ip=$OPTARG 
+        ;;
+        m) movingsec=1
+        ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
+
+moving=
+
+ while IFS=, read -r t sec rest; do 
+    if [[ ! -z $sec ]]; then
+        read -r s rest <<< $sec;
+        if [[ ! -z $movingsec ]]; then  
+            echo $s
+        else
+            [[ ! -z $s ]] && moving+=$s$'\n'
+        fi
+    fi 
+ done < <(dtime -i "$ip" "$1" "$2" 0) 
+
+if [[  -z $movingsec ]]; then
+  sort -n <<< $moving | uniq -c 
+fi
