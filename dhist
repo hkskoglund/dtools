@@ -4,14 +4,17 @@ function usage
 {
   echo "Usage: $(basename "$0") -i ip"
   echo "    -m only show moving sec"
+  echo "    -c comma separated moving sec"
   exit 1 
 }
 
-while getopts mi: opt; do
+while getopts cmi: opt; do
     case $opt in
         i) ip=$OPTARG 
         ;;
         m) movingsec=1
+        ;;
+        c) comma=1
         ;;
     esac
 done
@@ -26,12 +29,17 @@ moving=
     if [[ ! -z $sec ]]; then
         read -r s rest <<< $sec;
         if [[ ! -z $movingsec ]]; then  
-            echo $s
+           [[ ! -z $comma ]] && commastr+=$s,
+           echo $s
         else
             [[ ! -z $s ]] && moving+=$s$'\n'
         fi
     fi 
  done < <(dtime -i "$ip" "$1" "$2" 0) 
+
+commastr=${commastr%,}
+
+ [[ ! -z $comma ]] && echo -e "\n$commastr"
 
 moving=${moving%$'\n'} # remove \n at end
 
