@@ -2,7 +2,7 @@
 Description=Ping camera on %I
 
 [Service]
-ExecStart=/home/henning/.local/bin/dping %I
+ExecStart=/bin/sh -c 'dping %I'
 
 [Install]
 #WantedBy=multi-user.target

@@ -1,0 +1,20 @@
+#!/bin/bash
+#get admin config settings for dlink web server
+function usage 
+{
+  echo "Usage: $(basename "$0") -i ip -k keyword"
+  exit 1 
+}
+
+while getopts k:i: opt; do
+    case $opt in
+        i) ip=$OPTARG ;;
+        k) k=$OPTARG ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
+
+grep "^$k.*$ip" ~/.config/dtools/admin.conf | cut -d' ' -f4

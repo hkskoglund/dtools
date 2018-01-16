@@ -2,12 +2,12 @@
 
 function usage 
 {
-  echo -e "No ip address\nUsage: $(basename "$0") [-d] [-l] -i ip [dir ... ]"
+  echo -e "No ip address\nUsage: $(basename "$0") [-d] [-l] -i ip [-t localdir] [remotedir ... ]"
   printf "\t-l long format\n\t-d only list directories and files\n" 
   exit 1
 }
 
-while getopts ldi: opt; do
+while getopts ldi:t: opt; do
     case $opt in
         l) longformatopt=1
             ;;
@@ -15,10 +15,17 @@ while getopts ldi: opt; do
             ;;
         i) ip=$OPTARG
             ;;
+        t) targetdir=$OPTARG
+           cd "$targetdir" || exit 1
+           ;;
     esac
 done
 
 [[ -z "$ip" ]] && usage
+
+[[ -z "$targetdir" ]] && { configdir=$(ddir -i "$ip"); cd $configdir  ||  exit 1; } 
+
+echo "Files downloaded to $(pwd)"
 
 shift "$((OPTIND-1))"
 

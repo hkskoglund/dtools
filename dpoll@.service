@@ -2,7 +2,7 @@
 Description=Get videos from camera on %I
 
 [Service]
-ExecStart=~/.local/bin/dpoll -i %I
+ExecStart=/bin/sh -c 'cd $(ddir -i %I); dpoll -i %I'
 #[Install]
 #WantedBy=multi-user.target
 #Also=gsl.timer
