@@ -1,0 +1,61 @@
+#!/bin/bash
+
+function usage 
+{
+  echo "Usage: $(basename "$0") -c command -s service -i ip"
+  echo -e "Options:\n\t-c start|stop - start/stop service/timer\n\t-s dping|dpoll|drec - ping, polling or recording\n\t-i ip address"
+  exit 1 
+}
+
+while getopts c:s:i: opt; do
+    case $opt in
+        i) ip=$OPTARG ;;
+        s) service=$OPTARG ;;
+        c) command=$OPTARG ;;
+    esac
+done
+
+[[ -z "$ip" || -z "$service" || -z "$command" ]] && usage
+
+shift "$((OPTIND-1))"
+
+case $command in 
+
+   start)
+
+        case $service in
+        dping)
+            systemctl --user enable $service@$ip.service
+            systemctl --user start $service@$ip.service
+            systemctl --user --no-pager status $service@$ip.service
+            ;;
+            dpoll|drec)
+
+            systemctl --user enable $service@$ip.timer
+            systemctl --user start $service@$ip.timer
+            systemctl --user --no-pager status $service@$ip.{timer,service}
+            ;;
+            *)
+            echo "$service@$ip not supported"
+            ;;
+        esac
+
+     ;;
+
+    stop)
+
+       case $service in
+         dping)
+           systemctl --user stop $service@$ip.service
+           systemctl --user disable $service@$ip.service
+           ;;
+        dpoll|drec)
+           systemctl --user stop $servbice@$ip.{timer,service}
+           systemctl --user disable $service@$ip.{timer,service}
+           ;;
+        esac
+    ;;
+    *)
+      echo "$command unknown"
+      ;;
+esac

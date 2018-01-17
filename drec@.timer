@@ -1,5 +1,5 @@
 [Unit]
-Description=Record sleep from DCS-936L camera at 22:30
+Description=Record from camera at 22:30
 
 [Timer]
 #Persistent=true

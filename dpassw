@@ -14,4 +14,4 @@ done
 [[ -z "$ip" ]] && usage
 
 shift "$((OPTIND-1))"
-dconfig -k password -i $ip
+dconfig -k password -i "$ip"

@@ -1,0 +1,23 @@
+#!/bin/bash
+
+function usage 
+{
+  echo "Usage: $(basename "$0") -d dtools directory"
+  exit 1 
+}
+
+while getopts d: opt; do
+    case $opt in
+        d) dir=$OPTARG ;;
+    esac
+done
+
+[[ -z "$dir" ]] && usage
+
+shift "$((OPTIND-1))"
+
+systemctl --user link "$dir/dpoll@.timer" "$dir/dpoll@.service" "$dir/drec@.timer" "$dir/drec@.service" "$dir/dping@.service"
+systemctl --user enable dpoll@.timer drec@.timer dping@.service "$dir/dtools.target"
+#systemctl --user daemon-reload
+#systemctl --user start rsl.timer gsl.timer psl.service
+#systemctl --user status {drec*,dpoll*,dping*}.{timer,service}
