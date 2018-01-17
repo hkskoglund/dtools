@@ -2,14 +2,17 @@
 #get admin config settings for dlink web server
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip -k keyword"
+  echo "Usage: $(basename "$0") -i ip -k keyword [-f configfile]"
   exit 1 
 }
 
-while getopts k:i: opt; do
+configfile=~/.config/dtools/admin.conf
+
+while getopts k:i:f: opt; do
     case $opt in
         i) ip=$OPTARG ;;
         k) k=$OPTARG ;;
+        f) configfile=$OPTARG ;;
     esac
 done
 
@@ -17,4 +20,6 @@ done
 
 shift "$((OPTIND-1))"
 
-grep "^$k.*$ip" ~/.config/dtools/admin.conf | cut -d' ' -f4
+while read -r keyword user ipaddress value rest; do
+  [[ $keyword == $k && $ipaddress == $ip ]] && echo $value
+done < $configfile

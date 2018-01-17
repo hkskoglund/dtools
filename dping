@@ -3,7 +3,7 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") ip [interval]"
+  echo "Usage: $(basename "$0") -i ip [interval]"
   exit 1 
 }
 

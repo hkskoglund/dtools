@@ -23,9 +23,16 @@ done
 
 [[ -z "$ip" ]] && usage
 
-[[ -z "$targetdir" ]] && { configdir=$(ddir -i "$ip"); cd $configdir  ||  exit 1; } 
-
-echo "Files downloaded to $(pwd)"
+if [[ -z "$targetdir" ]]; then
+  configdir=$(ddir -i "$ip"); 
+  if [[ ! -z "$configdir" ]]; then
+      cd "$configdir"  ||  exit 1; 
+      [[ -z "$listdir" ]] &&  echo "Files downloaded to $(pwd)"
+  else
+     echo "Download directory not found in configuration for $ip"
+     exit 1
+  fi
+fi 
 
 shift "$((OPTIND-1))"
 

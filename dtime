@@ -30,7 +30,7 @@ while read -r startms stopms startdate starttime stoptime sec cumsec; do
       (( sum+=$sec ));
       (( $sec > $threshold )) && echo "$startms,$sec $starttime $sum"; 
     fi; 
-done < <(dm -i "$ip")
+done < <(dmove -i "$ip")
 
 hours=$((sum / 60))
 minutes=$(( sum - hours * 60 ))
