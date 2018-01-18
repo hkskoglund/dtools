@@ -1,0 +1,58 @@
+#!/bin/bash
+
+function usage 
+{
+  echo -e "Usage: $(basename "$0") -i ip [dir ... ]"
+  exit 1
+}
+
+while getopts ldi: opt; do
+    case $opt in
+        i) ip=$OPTARG
+            ;;
+    esac
+done
+
+[[ -z "$ip" ]] && usage
+
+shift "$((OPTIND-1))"
+
+server=$(dserver -i "$ip")
+
+case $server in
+
+  Embedthis-Appweb*)
+  
+   for i in $*; do
+     if [[ ${i:0:1} != / ]]; then
+       foldernames+=/$i',' # add / at the beginning if needed
+     else
+       foldernames+=$i','
+     fi
+    done
+   
+    if [ ! -z "$foldernames" ]; then
+      dreq "http://$ip/cgi-bin/sdoperate.cgi?del=$foldernames" >/dev/null
+    else
+      echo 'No directories specified'
+    fi
+
+  ;;
+  
+  dcs-lig-httpd*)
+    
+    for i in $*; do
+      if  [[ ${i:0:1} == / ]]; then
+        foldernames+=${i#/}'*' # remove / at the beginning if needed
+      else
+        foldernames+=${i}'*'
+      fi
+    done
+
+    if [ ! -z "$foldernames" ]; then
+      dreq "http://$ip/eng/admin/adv_sdcard.cgi" --data "command=delete&FolderName=$foldernames" >/dev/null
+    else
+      echo 'No directories specified'
+    fi
+     ;;
+esac

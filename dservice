@@ -2,39 +2,51 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -c command -s service -i ip"
-  echo -e "Options:\n\t-c start|stop - start/stop service/timer\n\t-s dping|dpoll|drec - ping, polling or recording\n\t-i ip address"
+  echo "Usage: $(basename "$0") -c command [-d dtools directory -s service -i ip] "
+  echo -e "Options:\n\t-c start|stop|enable|disable - start/stop service/timer\n\t-s dping|dpoll|drec - ping, polling or recording\n\t-i ip address"
   exit 1 
 }
 
-while getopts c:s:i: opt; do
+while getopts c:d:s:i: opt; do
     case $opt in
+        d) dir=$OPTARG ;;
+        c) command=$OPTARG ;;
         i) ip=$OPTARG ;;
         s) service=$OPTARG ;;
-        c) command=$OPTARG ;;
     esac
 done
 
-[[ -z "$ip" || -z "$service" || -z "$command" ]] && usage
+[[  -z "$command" ]] && usage
 
 shift "$((OPTIND-1))"
 
-case $command in 
+case $command in
+  enable)
+  
+      systemctl --user enable "$dir/dpoll@.timer" "$dir/dpoll@.service" "$dir/drec@.timer" "$dir/drec@.service" "$dir/dping@.service"
+      ;;
 
-   start)
+  disable)
+    systemctl --user disable "dpoll@.timer" "dpoll@.service" "drec@.timer" "drec@.service" "dping@.service"
+      ;;
+    
+  start)
 
         case $service in
-        dping)
+            dping)
+            
             systemctl --user enable $service@$ip.service
             systemctl --user start $service@$ip.service
             systemctl --user --no-pager status $service@$ip.service
             ;;
+            
             dpoll|drec)
 
             systemctl --user enable $service@$ip.timer
             systemctl --user start $service@$ip.timer
             systemctl --user --no-pager status $service@$ip.{timer,service}
             ;;
+            
             *)
             echo "$service@$ip not supported"
             ;;
@@ -56,6 +68,9 @@ case $command in
         esac
     ;;
     *)
-      echo "$command unknown"
-      ;;
+    echo "Unknown command $command"
 esac
+#systemctl --user enable dpoll@.timer drec@.timer dping@.service "$dir/dtools.target"
+#systemctl --user daemon-reload
+#systemctl --user start rsl.timer gsl.timer psl.service
+#systemctl --user status {drec*,dpoll*,dping*}.{timer,service}

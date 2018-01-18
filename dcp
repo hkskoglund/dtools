@@ -226,9 +226,11 @@ case $server in
         
        dirfiles=
 
-       [[ ! ${dir:0:1} == '/'  ]] && dir=/$dir
+       [[ ! ${dir:0:1} == '/'  ]] && dir=/$dir # Adding / at start allows IFS=/ to be used
 
        IFS='/' read -r d1 d2 d3 basename <<< "$dir"
+
+        [[ -z $d2 ]] && dir= # No directory was specified on command line
 
         [[ ! -z $d2 ]] && dir=$d2;  [[ ! -z $d3 ]] && dir+=/$d3; [[ ! -z $d4 ]] && dir+=/$d4
 

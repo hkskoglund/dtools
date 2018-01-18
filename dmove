@@ -26,7 +26,7 @@ case $server in
 
         while read -r date1 time1 eventh1 event1 rest1; do
             
-            [[ "$event1" != "trigger" ]] && continue # start on 'trigger' event
+            [[ $event1 != trigger ]] && continue # start on 'trigger' event
             
             read -r date2 time2 eventh2 event2 rest2
             
