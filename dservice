@@ -35,16 +35,16 @@ case $command in
         case $service in
             dping)
             
-            systemctl --user enable $service@$ip.service
-            systemctl --user start $service@$ip.service
-            systemctl --user --no-pager status $service@$ip.service
+            systemctl --user enable "$service@$ip.service"
+            systemctl --user start "$service@$ip.service"
+            systemctl --user --no-pager status "$service@$ip.service"
             ;;
             
             dpoll|drec)
 
-            systemctl --user enable $service@$ip.timer
-            systemctl --user start $service@$ip.timer
-            systemctl --user --no-pager status $service@$ip.{timer,service}
+            systemctl --user enable "$service@$ip.timer"
+            systemctl --user start "$service@$ip.timer"
+            systemctl --user --no-pager status "$service@$ip."{timer,service}
             ;;
             
             *)
@@ -58,15 +58,20 @@ case $command in
 
        case $service in
          dping)
-           systemctl --user stop $service@$ip.service
-           systemctl --user disable $service@$ip.service
+           systemctl --user stop "$service@$ip.service"
+           systemctl --user disable "$service@$ip.service"
            ;;
         dpoll|drec)
-           systemctl --user stop $servbice@$ip.{timer,service}
-           systemctl --user disable $service@$ip.{timer,service}
+           systemctl --user stop "$service@$ip".{timer,service}
+           systemctl --user disable "$service@$ip".{timer,service}
            ;;
         esac
     ;;
+
+    status)
+
+       systemctl --user status dpoll*.timer dping* drec*.timer
+       ;;
     *)
     echo "Unknown command $command"
 esac

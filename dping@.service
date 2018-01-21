@@ -5,6 +5,4 @@ Description=Ping camera on %I
 ExecStart=/bin/sh -c 'dping -i %I'
 
 [Install]
-#WantedBy=multi-user.target
-#Also=psl.timer
-WantedBy=default.target
+WantedBy=dtools.target

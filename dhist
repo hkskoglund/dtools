@@ -3,18 +3,19 @@
 function usage 
 {
   echo "Usage: $(basename "$0") -i ip"
-  echo "    -m only show moving sec"
-  echo "    -c comma separated moving sec"
+  echo "    -m n moving sec"
+  echo "    -m c moving sec comma separated "
+  echo "    -d disable histogram"
   exit 1 
 }
 
-while getopts cmi: opt; do
+while getopts dm:i: opt; do
     case $opt in
         i) ip=$OPTARG 
         ;;
-        m) movingsec=1
+        m) movingopt=$OPTARG
         ;;
-        c) comma=1
+        d) disablehistopt=1
         ;;
     esac
 done
@@ -25,24 +26,27 @@ shift "$((OPTIND-1))"
 
 moving=
 
+#Format : 1516496264000,36 01:57:44 346
+
  while IFS=, read -r t sec rest; do 
     if [[ ! -z $sec ]]; then
         read -r s rest <<< $sec;
-        if [[ ! -z $movingsec ]]; then  
-           [[ ! -z $comma ]] && commastr+=$s,
-           echo $s
-        else
-            [[ ! -z $s ]] && moving+=$s$'\n'
-        fi
+        case $movingopt in
+          n) moving+=$s$'\n'
+             ;;
+          c) comma+=$s','
+             moving+=$s$'\n'
+             ;;
+        esac
     fi 
  done < <(dtime -i "$ip" "$1" "$2" 0) 
 
-commastr=${commastr%,}
-
- [[ ! -z $comma ]] && echo -e "\n$commastr"
-
+comma=${comma%,}
 moving=${moving%$'\n'} # remove \n at end
 
-if [[  -z $movingsec ]]; then
-  sort -n <<< $moving | uniq -c 
+[[ ! -z $moving ]] &&  echo -e "$moving"
+[[ $movingopt == 'c' ]] && echo -e "\n$comma"
+   
+if [[ ! -z $moving && $disablehistopt != '1' ]]; then
+  sort -n <<< "$moving" | uniq -c 
 fi

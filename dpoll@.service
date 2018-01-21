@@ -1,8 +1,7 @@
 [Unit]
-Description=Get videos from camera on %I
+Description=Get videos and images from camera on %I
 
 [Service]
-ExecStart=/bin/sh -c 'cd $(ddir -i %I); dpoll -i %I'
+ExecStart=/bin/sh -c 'dpoll -i %I'
 #[Install]
-#WantedBy=multi-user.target
-#Also=gsl.timer
+#WantedBy=dtools.target

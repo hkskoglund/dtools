@@ -3,13 +3,14 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip"
+  echo "Usage: $(basename "$0") -v -i ip"
   exit 1 
 }
 
-while getopts i: opt; do
+while getopts vi: opt; do
     case $opt in
         i) ip=$OPTARG ;;
+        v) verbose="-v" ;;
     esac
 done
 
@@ -17,7 +18,22 @@ done
 
 shift "$((OPTIND-1))"
 
-# Use Server-field in http response?
+# Use Server-field in http response
 # Server: dcs-lig-httpd               DCS-936L
 # Server: Embedthis-Appweb/3.3.1      DCS-2530L
-curl --head "$ip" --silent  2>&1 | while IFS=':' read -r k v; do [[ $k == Server ]] && { echo "${v# }"; break; } done
+
+serverhead=$(curl $verbose --head "$ip" --silent)
+
+curlexit=$?
+if [[ $curlexit != 0 ]]; then
+   exit $curlexit
+fi
+
+if [[ ! -z "$verbose" ]]; then
+    echo "$serverhead"
+fi
+
+while IFS=':' read -r k v; do
+    [[ $k == Server ]] && { echo "${v# }"; break; }
+done <<< "$serverhead"
+

@@ -8,3 +8,4 @@ OnCalendar=Mon-Sun *-*-* 22:30:00
 [Install]
 #WantedBy=network-online.target
 # USER WantedBy=default.target
+#WantedBy=dtools.target

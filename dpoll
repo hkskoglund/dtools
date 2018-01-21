@@ -17,6 +17,12 @@ done
 shift "$((OPTIND-1))"
 
 server=$(dserver -i "$ip")
+
+if [[ -z $server ]]; then
+   echo "Failed to get server for ip $ip"
+   exit 1;
+fi
+
 read -r Y m d H M < <(date -d'1 hours ago' +'%Y %m %d %H %M')
 
 case $server in
