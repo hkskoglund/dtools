@@ -2,13 +2,17 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip"
+  echo "Usage: $(basename "$0") -i ip [-d]"
+  echo -e "\t-d - argument to date -d option, default 1 hours ago)\n"
   exit 1 
 }
 
-while getopts i: opt; do
+while getopts d:i: opt; do
     case $opt in
-        i) ip=$OPTARG ;;
+        i) ip=$OPTARG 
+        ;;
+        d) dopt=$OPTARG
+        ;;
     esac
 done
 
@@ -23,13 +27,20 @@ if [[ -z $server ]]; then
    exit 1;
 fi
 
-read -r Y m d H M < <(date -d'1 hours ago' +'%Y %m %d %H %M')
+[[ -z $dopt  ]] && dopt='1 hours ago'
+
+
+read -r Y m d H M < <(date -d"$dopt" +'%Y %m %d %H %M')
+exit_status=$?
+if (( exit_status  )) ; then
+  exit $exit_status
+fi
 
 case $server in
    
    Embedthis-Appweb*)
 
-      dcp -i "$ip" "/video/$Y$m$d/$H"
+    dcp -i "$ip" "/video/$Y$m$d/$H"
    ;;
 
    dcs-lig-httpd*)

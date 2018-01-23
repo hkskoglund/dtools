@@ -263,7 +263,7 @@ case $server in
         
         parse_page
 
-        [[ ! -z $dirfiles && ! $listdir ]] && { echo "$dir -> $(pwd) ($numfiles for download)"; dreq $verbose --remote-header-name --remote-name-all $dirfiles; }
+        [[ ! -z $dirfiles && ! $listdir ]] && { echo "$dir -> $(pwd) ($numfiles files)"; dreq $verbose --remote-header-name --remote-name-all $dirfiles; }
 
         shift;
 
