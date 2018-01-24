@@ -3,13 +3,15 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip [interval]"
+  echo "Usage: $(basename "$0") -i ip - t [interval]"
   exit 1 
 }
 
-while getopts i: opt; do
+while getopts t:i: opt; do
     case $opt in
-        i) ip=$OPTARG ;;
+        i) ip=$OPTARG 
+        ;;
+        t) interval=$OPTARG
     esac
 done
 
@@ -17,7 +19,6 @@ done
 
 shift "$((OPTIND-1))"
 
-interval=$1
 if [ -z "$interval" ]; then
   interval=30
 fi;

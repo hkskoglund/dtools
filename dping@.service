@@ -1,8 +1,19 @@
 [Unit]
-Description=Ping camera on %I
+
+Description=Service Ping camera on %I
+After=default.target
 
 [Service]
-ExecStart=/bin/sh -c 'dping -i %I'
+
+ExecStart=%h/.local/bin/dtools/dping -i %I -t 300
 
 [Install]
+
+#4) In case of template units, the unit is meant to be enabled with some
+#  instance name specified.
+
+#Try link command for template, and enable for instance
+#systemctl --user link /home/henning/github/dtools/dping@.service
+#systemctl --user enable dping@192.168.0.110.service
+
 WantedBy=dtools.target

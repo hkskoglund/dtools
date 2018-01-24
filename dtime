@@ -23,16 +23,13 @@ stop=$(($(date -d"$2" +%s) * 1000))
 threshold=$3
 [[ -z $threshold ]] && threshold=10
 
-sum=0;
+totalsec=0;
 
 while read -r startms stopms startdate starttime stoptime sec cumsec; do 
     if (( $startms >= $start && $startms <= $stop )); then 
-      (( sum+=$sec ));
-      (( $sec > $threshold )) && echo "$startms,$sec $starttime $sum"; 
+      (( totalsec+=$sec ));
+      (( $sec > $threshold )) && echo "$startms,$sec $starttime $totalsec"; 
     fi; 
 done < <(dmove -i "$ip")
 
-hours=$((sum / 60))
-minutes=$(( sum - hours * 60 ))
-
-printf "%d %02d:%02d\n" $sum $hours $minutes 
+dsectohhmm $totalsec

@@ -1,0 +1,6 @@
+#!/bin/bash
+
+hours=$(( $1 / 60))
+minutes=$(( $1 - hours * 60 ))
+
+printf "%d %02d:%02d\n" "$1" $hours $minutes

@@ -23,7 +23,7 @@ shift "$((OPTIND-1))"
 case $command in
   enable)
   
-      systemctl --user enable "$dir/dpoll@.timer" "$dir/dpoll@.service" "$dir/drec@.timer" "$dir/drec@.service" "$dir/dping@.service" "$dir/dtools.target"
+      systemctl --user link "$dir/dpoll@.timer" "$dir/dpoll@.service" "$dir/drec@.timer" "$dir/drec@.service" "$dir/dping@.service" 
       
       case $service in
          dping)
@@ -38,7 +38,7 @@ case $command in
       ;;
 
   disable)
-    systemctl --user disable "dpoll@.timer" "dpoll@.service" "drec@.timer" "drec@.service" "dping@.service" "dtools.target"
+    systemctl --user disable "dpoll@.timer" "dpoll@.service" "drec@.timer" "drec@.service" "dping@.service" 
       ;;
     
   start)
@@ -46,14 +46,12 @@ case $command in
         case $service in
             dping)
             
-            
             systemctl --user start "$service@$ip.service"
             systemctl --user --no-pager status "$service@$ip.service"
             ;;
             
             dpoll|drec)
 
-           
             systemctl --user start "$service@$ip.timer"
             systemctl --user --no-pager status "$service@$ip."{timer,service}
             ;;
@@ -80,7 +78,7 @@ case $command in
 
     status)
 
-       systemctl --user status dpoll*.timer dping* drec*.timer
+       systemctl --user status dpoll@*.timer dping@*.service drec@*.timer
        ;;
 
     wants)
@@ -88,13 +86,13 @@ case $command in
      case $service in
             dping)
             
-           systemctl --user add-wants dtools.target "$service@$ip.service"
+           systemctl --user add-wants default.target "$service@$ip.service"
             ;;
             
             dpoll|drec)
 
             
-            systemctl --user add-wants dtools.target "$service@ip.timer"
+            systemctl --user add-wants default.target "$service@$ip.timer"
             
             ;;
             

@@ -1,15 +1,13 @@
 [Unit]
-Description=Get video from camera each hour
+
+Description=Timer for poll video from camera %I
 
 [Timer]
-
-#Get videos as immediately after boot
-OnBootSec=0
 #Persistent is only applicable when using OnCalendar
 Persistent=true
 OnCalendar=hourly
 
 [Install]
-#WantedBy=network-online.target
-# USER WantedBy=default.target
+
 WantedBy=dtools.target
+

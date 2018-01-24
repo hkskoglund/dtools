@@ -32,7 +32,7 @@ fi
 
 read -r Y m d H M < <(date -d"$dopt" +'%Y %m %d %H %M')
 exit_status=$?
-if (( exit_status  )) ; then
+if (( exit_status  )) ; then # in case date fails
   exit $exit_status
 fi
 

@@ -1,7 +1,14 @@
 [Unit]
-Description=Get videos and images from camera on %I
+
+Description=Service Poll video from camera on %I
+After=default.target
 
 [Service]
-ExecStart=/bin/sh -c 'dpoll -i %I'
-#[Install]
-#WantedBy=dtools.target
+
+#Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:%h/.local/bin/dtools
+
+ExecStart=%h/.local/bin/dtools/dpoll -i %I
+
+[Install]
+
+WantedBy=dtools.target

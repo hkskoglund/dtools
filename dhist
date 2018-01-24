@@ -2,7 +2,7 @@
 # Simple histogram of moving time in seconds between start and end time
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip"
+  echo "Usage: $(basename "$0") -i ip starttime stoptime (yyyy-mm-dd hh:mm:ss)"
   echo "    -m n moving sec"
   echo "    -m c moving sec comma separated "
   echo "    -d disable histogram"
@@ -25,28 +25,25 @@ done
 shift "$((OPTIND-1))"
 
 moving=
-
+totalsec=0
 #Format : 1516496264000,36 01:57:44 346
 
  while IFS=, read -r t sec rest; do 
-    if [[ ! -z $sec ]]; then
-        read -r s rest <<< $sec;
-        case $movingopt in
-          n) moving+=$s$'\n'
-             ;;
-          c) comma+=$s','
-             moving+=$s$'\n'
-             ;;
-        esac
-    fi 
+     [[ -z $sec ]] && continue
+    read -r s rest <<< "$sec"
+    (( totalsec+="$s" ))
+    moving+=$s$'\n'
+    [[ $movingopt == 'c' ]] && comma+=$s','
  done < <(dtime -i "$ip" "$1" "$2" 0) 
 
 comma=${comma%,}
 moving=${moving%$'\n'} # remove \n at end
 
-[[ ! -z $moving ]] &&  echo -e "$moving"
+[[ $movingopt == 'n' ]] &&  echo -e "$moving"
 [[ $movingopt == 'c' ]] && echo -e "\n$comma"
    
 if [[ ! -z $moving && $disablehistopt != '1' ]]; then
   sort -n <<< "$moving" | uniq -c 
 fi
+
+dsectohhmm $totalsec
