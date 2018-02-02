@@ -23,4 +23,8 @@ if [ -z "$interval" ]; then
   interval=30
 fi;
 
-ping -i $interval -D "$ip" | while read -r pong; do if [[ $pong != *"PING"* ]]; then echo "$(date +'%F %T'): $pong" ; fi; done
+while read -r pong; do
+  if [[ $pong != *"PING"* ]]; then 
+     echo "$(date +'%F %T'): $pong" ;
+ fi;
+done < <(ping -i $interval -D "$ip")

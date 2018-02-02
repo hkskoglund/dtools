@@ -5,7 +5,7 @@ After=default.target
 
 [Service]
 
-ExecStart=%h/.local/bin/dtools/dping -i %I -t 300
+ExecStart=%h/.local/bin/dtools/dping -i %I -t 600
 
 [Install]
 

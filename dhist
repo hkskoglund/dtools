@@ -2,14 +2,15 @@
 # Simple histogram of moving time in seconds between start and end time
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip starttime stoptime (yyyy-mm-dd hh:mm:ss)"
+  echo "Usage: $(basename "$0") -i ip -a starttime -b stoptime"
   echo "    -m n moving sec"
   echo "    -m c moving sec comma separated "
   echo "    -d disable histogram"
+  echo "    timeformat : (yyyy-mm-dd hh:mm:ss)"
   exit 1 
 }
 
-while getopts dm:i: opt; do
+while getopts a:b:dm:i: opt; do
     case $opt in
         i) ip=$OPTARG 
         ;;
@@ -17,12 +18,17 @@ while getopts dm:i: opt; do
         ;;
         d) disablehistopt=1
         ;;
+        a) start=$OPTARG
+        ;;
+        b) stop=$OPTARG
+        ;;
     esac
 done
 
 [[ -z "$ip" ]] && usage
 
 shift "$((OPTIND-1))"
+
 
 moving=
 totalsec=0
@@ -32,9 +38,9 @@ totalsec=0
      [[ -z $sec ]] && continue
     read -r s rest <<< "$sec"
     (( totalsec+="$s" ))
-    moving+=$s$'\n'
+    moving+=$(printf "%2d" "$s")$'\n'
     [[ $movingopt == 'c' ]] && comma+=$s','
- done < <(dtime -i "$ip" "$1" "$2" 0) 
+ done < <(dmove -i "$ip" -a "$start" -b "$stop" -t 0) 
 
 comma=${comma%,}
 moving=${moving%$'\n'} # remove \n at end

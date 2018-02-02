@@ -4,19 +4,35 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip"
+  echo "Usage: $(basename "$0") -i ip -a start -b stop [-t lower threshold] [-u upper_threshold]"
   exit 1 
 }
 
-while getopts i: opt; do
+while getopts a:b:i:t:u: opt; do
     case $opt in
-        i) ip=$OPTARG ;;
+        i) ip=$OPTARG 
+        ;;
+        #dateformat: "2018-01-09 22:50:00"/"20180109 22:55:00"
+        a) start=$(($(date -d"$OPTARG" +%s) * 1000))
+        ;;
+        b) stop=$(($(date -d"$OPTARG" +%s) * 1000))
+           [[ ! -z $start ]] && hasTimespan=1
+        ;;
+        t) threshold=$OPTARG
+        ;;
+        u) upper_threshold=$OPTARG
+        ;;
     esac
 done
 
 [[ -z "$ip" ]] && usage
 
 shift "$((OPTIND-1))"
+
+[[ -z $threshold ]] && threshold=0
+[[ -z $upper_threshold ]] && upper_threshold=$((24*60*60))
+
+totalsec=0;
 
 server=$(dserver -i "$ip")
 
@@ -31,11 +47,29 @@ case $server in
             read -r date2 time2 eventh2 event2 rest2
             
             sec1970_1=$(date -d "$date1 $time1" '+%s')
-           [[ ! -z $sec1970_2 ]] && nomotion_sec=$((sec1970_1-sec1970_2))
-            sec1970_2=$(date -d "$date2 $time2" '+%s')
+            sec1970_1_ms=$(( $sec1970_1 * 1000 ))
+           
+            [[ ! -z $sec1970_2 ]] && nomotion_sec=$((sec1970_1-sec1970_2))
             
-            echo "$(( "$sec1970_1" * 1000)) $(( "$sec1970_2" * 1000)) $date1 $time1 $time2 $(printf "%2d %4d" $(( "$sec1970_2" - "$sec1970_1"  )) "$nomotion_sec" )"
+            sec1970_2=$(date -d "$date2 $time2" '+%s')
+            sec1970_2_ms=$(( $sec1970_2 * 1000 ))
+
+            sec=$(( sec1970_2 - sec1970_1 ))
+
+            if (( hasTimespan )) ; then
+
+                if (( $sec1970_1_ms >= $start && $sec1970_1_ms <= $stop )); then 
+                    (( totalsec+=$sec ));
+                    (( $sec >= $threshold && $sec < $upper_threshold )) && printf "%d,%2d %s %4d\n" $sec1970_1_ms $sec "$date1 $time1" $totalsec 
+                fi; 
+            else
+              echo "$sec1970_1_ms $sec1970_2_ms $date1 $time1 $time2 $(printf "%2d %4d" "$sec" "$nomotion_sec")"
+            fi
+
         done < <(dlog -m -i "$ip")
+
+        [[ $hasTimespan == 1 ]] && dsectohhmm $totalsec
+
         ;;
     *)
 
