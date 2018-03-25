@@ -10,7 +10,7 @@ function usage
   exit 1 
 }
 
-while getopts a:b:dm:i: opt; do
+while getopts ha:b:dm:i: opt; do
     case $opt in
         i) ip=$OPTARG 
         ;;
@@ -21,6 +21,8 @@ while getopts a:b:dm:i: opt; do
         a) start=$OPTARG
         ;;
         b) stop=$OPTARG
+        ;;
+        h) usage
         ;;
     esac
 done

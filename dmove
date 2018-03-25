@@ -4,11 +4,11 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip -a start -b stop [-t lower threshold] [-u upper_threshold]"
+  echo "Usage: $(basename "$0") -i ip -a start (YYYYMMDD HH:MM:SS) -b stop [-t lower threshold] [-u upper_threshold]"
   exit 1 
 }
 
-while getopts a:b:i:t:u: opt; do
+while getopts ha:b:i:t:u: opt; do
     case $opt in
         i) ip=$OPTARG 
         ;;
@@ -21,6 +21,8 @@ while getopts a:b:i:t:u: opt; do
         t) threshold=$OPTARG
         ;;
         u) upper_threshold=$OPTARG
+        ;;
+        h) usage
         ;;
     esac
 done
@@ -47,6 +49,11 @@ case $server in
             read -r date2 time2 eventh2 event2 rest2
             
             sec1970_1=$(date -d "$date1 $time1" '+%s')
+            if [ $? -ne 0 ]; then
+              sec1970_2=
+              continue
+            fi
+
             sec1970_1_ms=$(( $sec1970_1 * 1000 ))
            
             [[ ! -z $sec1970_2 ]] && nomotion_sec=$((sec1970_1-sec1970_2))
@@ -75,6 +82,7 @@ case $server in
 
       echo "Server not supported: $server"
       exit 1
+
       ;;
 
 esac
