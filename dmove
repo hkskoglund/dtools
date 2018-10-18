@@ -4,11 +4,12 @@
 
 function usage 
 {
-  echo "Usage: $(basename "$0") -i ip -a start (YYYYMMDD HH:MM:SS) -b stop [-t lower threshold] [-u upper_threshold]"
+  echo "Usage: $(basename "$0") -i ip -a '{start} (YYYYMMDD HH:MM:SS)' -b '{stop}' [-t lower threshold] [-u upper_threshold]"
   exit 1 
 }
 
 while getopts ha:b:i:t:u: opt; do
+    #echo "OPT $opt $OPTIND"
     case $opt in
         i) ip=$OPTARG 
         ;;

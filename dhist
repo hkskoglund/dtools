@@ -6,7 +6,7 @@ function usage
   echo "    -m n moving sec"
   echo "    -m c moving sec comma separated "
   echo "    -d disable histogram"
-  echo "    timeformat : (yyyy-mm-dd hh:mm:ss)"
+  echo "    timeformat : (yyyymmdd hh:mm:ss)"
   exit 1 
 }
 
